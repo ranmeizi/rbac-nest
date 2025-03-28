@@ -1,26 +1,4 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# RBAC-NEST
 
 ## Description
 
@@ -58,16 +36,62 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
-## Support
+### 迁移
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+需要使用迁移时，使用迁移修改数据库，当然也有不需要的时候
 
-## Stay in touch
+- 创建迁移
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+pnpm migration:generate migrations/{migrate_name}
+```
 
-## License
+书写 up down 函数进行 迁移/回滚操作。使用 entity 生成 orm 会自动生成ddl语句
 
-Nest is [MIT licensed](LICENSE).
+- 迁移 up
+```
+pnpm migration:run
+```
+
+- 回滚 down
+```
+pnpm typeorm migration:revert
+```
+
+### 生成语句
+
+nest-cli 有很便利的生成 controller services 测试 一条龙的语句
+
+https://nestjs.bootcss.com/cli/usages.html#nest-generate
+
+### 实体
+
+创建数据表操作实体
+
+### typeorm 使用 typeorm 操作数据库
+
+https://www.typeorm.org/
+
+
+### 开发工具 apifox 
+
+## 开发流程
+
+1. 写 apifox 文档
+2. 创建对应实体 / 创建对应数据表
+3. orm 生成数据表 / 由数据表创建实体
+4. 修改实体
+5. nest gen res 
+6. 实现接口
+7. apifox 书写测试用例(可以当作简易前端用)
+
+## 开发计划
+
+1. Users
+2. Roles
+3. Permission
+4. Authentication - jwt 守卫
+5. Authorization
+
+是否需要前端？ 或是 apifox 可以当作前端。
+
