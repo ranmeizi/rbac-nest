@@ -4,9 +4,10 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './db';
-import { PermissionModule } from './rbac/permission/permission.module';
-import { UserModule } from './rbac/user/user.module';
-import { RoleModule } from './rbac/role/role.module';
+import { UsersModule } from './rbac/users/users.module';
+import { RolesModule } from './rbac/roles/roles.module';
+import { PermissionsModule } from './rbac/permissions/permissions.module';
+import { ResModule } from './res/res.module';
 
 @Module({
   imports: [
@@ -25,9 +26,10 @@ import { RoleModule } from './rbac/role/role.module';
         autoLoadEntities: true,
       }),
     }),
-    UserModule,
-    RoleModule,
-    PermissionModule,
+    UsersModule,
+    RolesModule,
+    PermissionsModule,
+    ResModule,
   ],
   controllers: [AppController],
   providers: [AppService],
