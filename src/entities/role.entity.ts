@@ -12,8 +12,8 @@ import { Permission } from './permission.entity';
 
 @Entity()
 export class Role {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 20, comment: '角色名' })
   name: string;

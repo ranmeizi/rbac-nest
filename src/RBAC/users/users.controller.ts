@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ResService } from 'src/res/res.service';
+import { QueryUserListDto } from './dto/query-user-list.dto';
 
 @Controller('users')
 export class UsersController {
@@ -20,14 +22,15 @@ export class UsersController {
   ) {}
 
   @Post('/create')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const res = await this.usersService.create(createUserDto);
+    return this.res.success(res);
   }
 
   @Get('/list')
-  findAll() {
-    // return this.usersService.findAll();
-    return this.res.success(this.usersService.findAll());
+  findAll(@Query() queryUserListDto: QueryUserListDto) {
+    // const res = this.usersService.findAll(queryUserListDto);
+    return this.res.success(res);
   }
 
   @Get('/getUserById')
