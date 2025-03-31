@@ -32,6 +32,7 @@ export class UsersController {
 
   @Get('/getUserById')
   findOne(@Param('id') id: string) {
+    throw new Error('这里有问题');
     return this.usersService.findOne(+id);
   }
 

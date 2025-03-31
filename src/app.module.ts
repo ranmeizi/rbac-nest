@@ -8,6 +8,7 @@ import { UsersModule } from './rbac/users/users.module';
 import { RolesModule } from './rbac/roles/roles.module';
 import { PermissionsModule } from './rbac/permissions/permissions.module';
 import { ResModule } from './res/res.module';
+import { ErrorHandlerModule } from './error-handler/error-handler.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { ResModule } from './res/res.module';
     UsersModule,
     RolesModule,
     PermissionsModule,
-    ResModule,
+    ResModule, // 通用响应体
+    ErrorHandlerModule, // 错误拦截
   ],
   controllers: [AppController],
   providers: [AppService],

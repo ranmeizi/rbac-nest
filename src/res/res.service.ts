@@ -3,15 +3,35 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class ResService {
   // 代码
-  BCodes = {};
+  Codes = {
+    Success: '200',
+  };
 
-  success(data: any) {
+  private json({ code, msg, data }) {
     return {
-      code: '200',
-      msg: '',
-      data: data,
+      code,
+      msg,
+      data,
     };
   }
 
-  error() {}
+  success(data: any, msg = 'success') {
+    return this.json({
+      code: this.Codes.Success,
+      msg: msg,
+      data: data,
+    });
+  }
+
+  error(code: string, msg = '', data = null) {
+    return this.json({
+      code,
+      msg,
+      data,
+    });
+  }
+
+  catchError(msg: string) {
+    return this.error('500', msg);
+  }
 }
