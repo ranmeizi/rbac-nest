@@ -16,6 +16,8 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+    // TODO 生成 psw 和 salt
+
     const user = this.userRepository.create({
       ...createUserDto,
       salt: 'salt1234',
@@ -49,8 +51,9 @@ export class UsersService {
     return list;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    const res = await this.userRepository.findOneBy({ id });
+    return res;
   }
 
   update(updateUserDto: UpdateUserDto) {

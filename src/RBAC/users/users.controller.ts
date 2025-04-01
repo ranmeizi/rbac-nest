@@ -21,29 +21,34 @@ export class UsersController {
     private readonly res: ResService,
   ) {}
 
+  /** 创建用户 */
   @Post('/create')
   async create(@Body() createUserDto: CreateUserDto) {
     const res = await this.usersService.create(createUserDto);
     return this.res.success(res);
   }
 
+  /** 查询用户列表 */
   @Get('/list')
   async findAll(@Query() queryUserListDto: QueryUserListDto) {
     const res = await this.usersService.findAll(queryUserListDto);
     return this.res.success(res);
   }
 
+  /** 查询单个用户 */
   @Get('/getUserById')
-  findOne(@Param('id') id: string) {
-    throw new Error('这里有问题');
-    return this.usersService.findOne(+id);
+  async findOne(@Query('id') id: string) {
+    const res = await this.usersService.findOne(id);
+    return this.res.success(res);
   }
 
+  /** 修改用户 */
   @Post('/update')
   update(@Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(updateUserDto);
   }
 
+  /** 删除用户 */
   @Post('/delete')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);

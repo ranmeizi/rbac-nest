@@ -1,5 +1,6 @@
 import {
   ArgumentsHost,
+  BadRequestException,
   Catch,
   ExceptionFilter,
   HttpException,
@@ -17,6 +18,7 @@ export class ErrorHandlerFilter<T> implements ExceptionFilter {
 
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    let errors = null;
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
@@ -25,13 +27,21 @@ export class ErrorHandlerFilter<T> implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      message =
-        typeof exceptionResponse === 'string'
-          ? exceptionResponse
-          : (exceptionResponse as any).message || message;
+
+      // 处理 class-validator 的验证错误
+      if (exception instanceof BadRequestException) {
+        const validationErrors = (exceptionResponse as any).message || [];
+        errors = validationErrors;
+        message = '请求参数验证失败';
+      } else {
+        message =
+          typeof exceptionResponse === 'string'
+            ? exceptionResponse
+            : (exceptionResponse as any).message || message;
+      }
     }
 
     // 返回统一的错误响应格式
-    response.status(status).json(this.res.catchError(message));
+    response.status(status).json(this.res.error('500', message, errors));
   }
 }
