@@ -9,10 +9,16 @@ import {
 } from 'typeorm';
 import { Role } from './role.entity';
 
+export enum EnumUserStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  LOCKED = 'locked',
+}
+
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 20, comment: '用户名' })
   username: string;
@@ -25,6 +31,14 @@ export class User {
 
   @Column({ type: 'varchar', length: 100, comment: '邮箱' })
   email: string;
+
+  @Column({
+    type: 'enum',
+    enum: EnumUserStatus,
+    default: EnumUserStatus.ACTIVE,
+    comment: '用户状态',
+  })
+  status: string;
 
   @Column({
     type: 'varchar',

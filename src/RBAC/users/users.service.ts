@@ -1,19 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EnumUserStatus, User } from 'src/entities/user.entity';
+import { Repository } from 'typeorm';
+import { CrudService } from 'src/utils/crud/crud.service';
+import { QueryUserListDto } from './dto/query-user-list.dto';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly crud: CrudService,
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    // TODO 生成 psw 和 salt
+
+    const user = this.userRepository.create({
+      ...createUserDto,
+      salt: 'salt1234',
+      status: EnumUserStatus.ACTIVE,
+    });
+
+    return await this.userRepository.save(user);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll({ search, status, ...pagination }: QueryUserListDto) {
+    const list = await this.crud.paginate({
+      repository: this.userRepository,
+      pagination,
+      alias: 'user',
+      filter(qb) {
+        if (!!status) {
+          qb = qb.where('user.status = :status', { status });
+        }
+
+        if (!!search) {
+          qb = qb.where('user.username LIKE :search', {
+            search: `%${search}%`,
+          });
+        }
+
+        return qb;
+      },
+    });
+
+    console.log('list', list);
+    return list;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    const res = await this.userRepository.findOneBy({ id });
+    return res;
   }
 
   update(updateUserDto: UpdateUserDto) {

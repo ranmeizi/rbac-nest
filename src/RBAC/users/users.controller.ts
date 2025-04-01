@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ResService } from 'src/res/res.service';
+import { QueryUserListDto } from './dto/query-user-list.dto';
 
 @Controller('users')
 export class UsersController {
@@ -19,28 +21,34 @@ export class UsersController {
     private readonly res: ResService,
   ) {}
 
+  /** 创建用户 */
   @Post('/create')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const res = await this.usersService.create(createUserDto);
+    return this.res.success(res);
   }
 
+  /** 查询用户列表 */
   @Get('/list')
-  findAll() {
-    // return this.usersService.findAll();
-    return this.res.success(this.usersService.findAll());
+  async findAll(@Query() queryUserListDto: QueryUserListDto) {
+    const res = await this.usersService.findAll(queryUserListDto);
+    return this.res.success(res);
   }
 
+  /** 查询单个用户 */
   @Get('/getUserById')
-  findOne(@Param('id') id: string) {
-    throw new Error('这里有问题');
-    return this.usersService.findOne(+id);
+  async findOne(@Query('id') id: string) {
+    const res = await this.usersService.findOne(id);
+    return this.res.success(res);
   }
 
+  /** 修改用户 */
   @Post('/update')
   update(@Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(updateUserDto);
   }
 
+  /** 删除用户 */
   @Post('/delete')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
