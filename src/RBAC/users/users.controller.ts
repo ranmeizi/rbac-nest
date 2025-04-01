@@ -28,8 +28,8 @@ export class UsersController {
   }
 
   @Get('/list')
-  findAll(@Query() queryUserListDto: QueryUserListDto) {
-    // const res = this.usersService.findAll(queryUserListDto);
+  async findAll(@Query() queryUserListDto: QueryUserListDto) {
+    const res = await this.usersService.findAll(queryUserListDto);
     return this.res.success(res);
   }
 

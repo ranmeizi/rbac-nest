@@ -9,6 +9,7 @@ import { RolesModule } from './rbac/roles/roles.module';
 import { PermissionsModule } from './rbac/permissions/permissions.module';
 import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
+import { CrudModule } from './utils/crud/crud.module';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { ErrorHandlerModule } from './error-handler/error-handler.module';
     RolesModule,
     PermissionsModule,
     ResModule, // 通用响应体
-    ErrorHandlerModule, // 错误拦截
+    ErrorHandlerModule, CrudModule, // 错误拦截
   ],
   controllers: [AppController],
   providers: [AppService],

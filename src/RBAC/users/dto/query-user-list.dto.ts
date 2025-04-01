@@ -14,8 +14,8 @@ export class QueryUserListDto {
 }
 
 export enum SortOrder {
-  Asc = 'asc',
-  Desc = 'desc',
+  ASC = 'ASC',
+  DESC = 'DESC',
 }
 
 /**

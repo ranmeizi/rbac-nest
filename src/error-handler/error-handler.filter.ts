@@ -13,6 +13,8 @@ export class ErrorHandlerFilter<T> implements ExceptionFilter {
   constructor(private readonly res: ResService) {}
 
   catch(exception: T, host: ArgumentsHost) {
+    console.log('catch', exception);
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
