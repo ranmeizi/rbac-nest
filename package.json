@@ -24,7 +24,8 @@
     "migration:revert": "pnpm typeorm migration:revert",
     "docker:setup": "powershell -ExecutionPolicy Bypass -File .\\scripts\\docker-setup.ps1",
     "docker:up": "docker-compose -f docker-compose.dev.yml up -d",
-    "docker:down": "docker-compose -f docker-compose.dev.yml down"
+    "docker:down": "docker-compose -f docker-compose.dev.yml down",
+    "async:wallpapers": "ts-node scripts/import-wallpapers.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

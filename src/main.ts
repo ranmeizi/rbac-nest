@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-
+import { importWallpapers } from 'scripts/import-wallpapers'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -15,5 +15,6 @@ async function bootstrap() {
   );
 
   await app.listen(3000);
+  await importWallpapers()
 }
 bootstrap();

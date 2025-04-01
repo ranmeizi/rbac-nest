@@ -10,6 +10,7 @@ import { PermissionsModule } from './rbac/permissions/permissions.module';
 import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
+import { WallpaperModule } from './wallpaper/wallpaper.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CrudModule } from './utils/crud/crud.module';
         autoLoadEntities: true,
       }),
     }),
+    WallpaperModule,
     UsersModule,
     RolesModule,
     PermissionsModule,

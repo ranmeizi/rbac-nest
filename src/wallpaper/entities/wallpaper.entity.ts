@@ -8,7 +8,7 @@ export class Wallpaper {
   @Column()
   slug: string;
 
-  @Column('jsonb')
+  @Column('json')
   alternative_slugs: {
     en: string;
     es: string;
@@ -47,10 +47,10 @@ export class Wallpaper {
   @Column()
   alt_description: string;
 
-  @Column('jsonb', { default: [] })
+  @Column('json', { default: [] })
   breadcrumbs: any[];
 
-  @Column('jsonb')
+  @Column('json')
   urls: {
     raw: string;
     full: string;
@@ -60,7 +60,7 @@ export class Wallpaper {
     small_s3: string;
   };
 
-  @Column('jsonb')
+  @Column('json')
   links: {
     self: string;
     html: string;
@@ -74,19 +74,19 @@ export class Wallpaper {
   @Column()
   liked_by_user: boolean;
 
-  @Column('jsonb', { default: [] })
+  @Column('json', { default: [] })
   current_user_collections: any[];
 
-  @Column({ nullable: true, type: 'jsonb' })
+  @Column({ nullable: true, type: 'json' })
   sponsorship: any;
 
-  @Column('jsonb', { default: {} })
+  @Column('json', { default: {} })
   topic_submissions: any;
 
   @Column()
   asset_type: string;
 
-  @Column('jsonb')
+  @Column('json')
   user: {
     id: string;
     updated_at: Date;
@@ -129,7 +129,7 @@ export class Wallpaper {
     };
   };
 
-  @Column('jsonb')
+  @Column('json')
   _metadata: {
     saved_at: Date;
     source: string;
