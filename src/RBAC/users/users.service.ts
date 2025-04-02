@@ -64,6 +64,9 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
+  /**
+   * 分页查询
+   */
   async findAll({ search, status, ...pagination }: QueryUserListDto) {
     const list = await this.crud.paginate({
       repository: this.userRepository,
@@ -84,20 +87,45 @@ export class UsersService {
       },
     });
 
-    console.log('list', list);
     return list;
   }
 
+  /**
+   * 查询单个用户
+   */
   async findOne(id: string) {
     const res = await this.userRepository.findOneBy({ id });
     return res;
   }
 
-  update(updateUserDto: UpdateUserDto) {
-    return `This action updates a #${updateUserDto.id} user`;
+  /**
+   * 修改用户
+   */
+  async update(updateUserDto: UpdateUserDto) {
+    const { id, ...updateData } = updateUserDto;
+
+    // 查找用户是否存在
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new Error(`用户 ID ${id} 不存在`);
+    }
+
+    console.log('updateData', updateData);
+
+    // 更新用户信息
+    Object.assign(user, updateData);
+    return await this.userRepository.save(user);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    // 查找用户是否存在
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new Error(`用户 ID ${id} 不存在`);
+    }
+
+    // 删除用户
+    await this.userRepository.remove(user);
+    return id;
   }
 }

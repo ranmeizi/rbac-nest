@@ -44,13 +44,15 @@ export class UsersController {
 
   /** 修改用户 */
   @Post('/update')
-  update(@Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto);
+  async update(@Body() updateUserDto: UpdateUserDto) {
+    const res = await this.usersService.update(updateUserDto);
+    return this.res.success(res);
   }
 
   /** 删除用户 */
   @Post('/delete')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  async remove(@Param('id') id: string) {
+    const res = await this.usersService.remove(id);
+    return this.res.success(res);
   }
 }
