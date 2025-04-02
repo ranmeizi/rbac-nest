@@ -4,7 +4,9 @@ import { Injectable } from '@nestjs/common';
 export class ResService {
   // 代码
   Codes = {
-    Success: '200',
+    Success: '000000', // 成功
+    BadRequest: '000400', // 请求参数错误
+    InternalError: '000500', // 服务器内部错误
   };
 
   private json({ code, msg, data }) {

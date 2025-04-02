@@ -17,6 +17,7 @@ export class QueryUserListDto {
   /**
    * Search term for username, email, firstName, or lastName
    */
+  @IsOptional()
   search?: string;
 
   @IsOptional()
@@ -28,6 +29,7 @@ export class QueryUserListDto {
   /**
    * 状态
    */
+  @IsOptional()
   status?: Status;
 }
 
