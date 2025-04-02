@@ -18,6 +18,7 @@ export class Wallpaper {
     ko: string;
     de: string;
     pt: string;
+    zh: string;
   };
 
   @Column()
@@ -47,8 +48,8 @@ export class Wallpaper {
   @Column()
   alt_description: string;
 
-  @Column('json', { default: [] })
-  breadcrumbs: any[];
+  @Column('json')
+  breadcrumbs: Array<Record<string, any>>;
 
   @Column('json')
   urls: {
@@ -74,14 +75,14 @@ export class Wallpaper {
   @Column()
   liked_by_user: boolean;
 
-  @Column('json', { default: [] })
-  current_user_collections: any[];
+  @Column('json')
+  current_user_collections: Array<Record<string, any>>;
 
   @Column({ nullable: true, type: 'json' })
   sponsorship: any;
 
-  @Column('json', { default: {} })
-  topic_submissions: any;
+  @Column('json')
+  topic_submissions: Record<string, any>;
 
   @Column()
   asset_type: string;

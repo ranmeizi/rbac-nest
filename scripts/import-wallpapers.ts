@@ -8,8 +8,8 @@ import { uploadImageToOSS, generateImageUrls } from './oss-config';
 export async function importWallpapers() {
     try {
         // 初始化NestJS应用
-        // const app = await NestFactory.createApplicationContext(AppModule);
-        // const wallpaperService = app.get(WallpaperService);
+        const app = await NestFactory.createApplicationContext(AppModule);
+        const wallpaperService = app.get(WallpaperService);
 
         // 读取wallpaper_json_data目录下的所有JSON文件
         const jsonDataDir = path.join(__dirname, '../../wallpaper_json_data');
@@ -17,7 +17,7 @@ export async function importWallpapers() {
         console.log(`读取${jsonDataDir}目录下的所有JSON文件...`);
         if (!fs.existsSync(jsonDataDir) || !fs.existsSync(imagesDir)) {
             console.error('wallpaper_json_data或wallpaper_images目录不存在！');
-            // await app.close();
+            await app.close();
             return;
         }
 
@@ -47,9 +47,9 @@ export async function importWallpapers() {
             wallpaper.urls = generateImageUrls(ossPath, width, height);
             try {
                 // 确保必要的日期字段是Date对象
-                wallpaper.created_at = new Date(wallpaper.created_at);
-                wallpaper.updated_at = new Date(wallpaper.updated_at);
-                wallpaper.promoted_at = wallpaper.promoted_at ? new Date(wallpaper.promoted_at) : null;
+                wallpaper.created_at = wallpaper.created_at ? new Date(wallpaper.created_at) : new Date();
+                wallpaper.updated_at = wallpaper.updated_at ? new Date(wallpaper.updated_at) : new Date();
+                wallpaper.promoted_at = wallpaper.promoted_at ? new Date(wallpaper.promoted_at) : new Date();
 
                 // 确保user对象中的日期字段也是Date对象
                 if (wallpaper.user) {
@@ -60,8 +60,8 @@ export async function importWallpapers() {
                 if (wallpaper._metadata) {
                     wallpaper._metadata.saved_at = new Date(wallpaper._metadata.saved_at);
                 }
-
-                // await wallpaperService.create(wallpaper);
+                console.log(wallpaper)
+                await wallpaperService.create(wallpaper);
                 successCount++;
                 console.log(`成功上传图片并导入壁纸: ${wallpaper.id}`);
             } catch (error) {
@@ -74,7 +74,7 @@ export async function importWallpapers() {
         console.log(`成功: ${successCount}`);
         console.log(`失败: ${errorCount}`);
 
-        // await app.close();
+        await app.close();
     } catch (error) {
         console.error('导入过程发生错误:', error);
         process.exit(1);
