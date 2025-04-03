@@ -11,7 +11,7 @@ import { BusinessException } from 'src/error-handler/BusinessException';
 @Controller('roles')
 export class RolesController {
   constructor(
-    private readonly rolesService: RolesService, // 使用 RolesService 而非 UsersService
+    private readonly rolesService: RolesService,
     private readonly res: ResService,
   ) {}
 

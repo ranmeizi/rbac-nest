@@ -13,6 +13,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ResService } from 'src/res/res.service';
 import { QueryUserListDto } from './dto/query-user-list.dto';
+import { BindRoleDto } from './dto/bind-role.dto';
+import { RemoveRoleDto } from './dto/remove-role.dto';
 
 @Controller('users')
 export class UsersController {
@@ -54,5 +56,40 @@ export class UsersController {
   async remove(@Param('id') id: string) {
     const res = await this.usersService.remove(id);
     return this.res.success(res);
+  }
+
+  /** 查询用户的角色列表 */
+  @Get('/getRoles')
+  async findAllRoles(@Query('userId') userId: string) {
+    const res = await this.usersService.findAllRoles(userId);
+    return this.res.success(res);
+  }
+
+  /** 为用户绑定角色 */
+  @Post('/bindRole')
+  async bindRole(@Body() bindRoleDto: BindRoleDto) {
+    const res = await this.usersService.bindRole(bindRoleDto);
+    return this.res.success(res);
+  }
+
+  /** 为用户移除角色 */
+  @Post('/removeRole')
+  async removeRole(@Body() removeRoleDto: RemoveRoleDto) {
+    const res = await this.usersService.removeRole(removeRoleDto);
+    return this.res.success(res);
+  }
+
+  /** 获取当前登陆用户 */
+  @Get('/getCurrentUser')
+  async getCurrentUser() {
+    // TODO 需要解析jwt
+    return '';
+  }
+
+  /** 获取当前登陆用户所有权限 */
+  @Get('/permissions')
+  getCurrentUserPermissions() {
+    // TODO
+    return '';
   }
 }
