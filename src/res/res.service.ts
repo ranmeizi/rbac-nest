@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class ResService {
   // 代码
-  Codes = {
+  static CODES = {
     Success: '000000', // 成功
     BadRequest: '000400', // 请求参数错误
     InternalError: '000500', // 服务器内部错误
@@ -19,7 +19,7 @@ export class ResService {
 
   success(data: any, msg = 'success') {
     return this.json({
-      code: this.Codes.Success,
+      code: ResService.CODES.Success,
       msg: msg,
       data: data,
     });

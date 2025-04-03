@@ -6,6 +6,7 @@ import { ResService } from 'src/res/res.service';
 import { QueryRoleListDto } from './dto/query-role-list.dto';
 import { BindPermissionDto } from './dto/bind-permission.dto';
 import { RemovePermissionDto } from './dto/remove-permission.dto';
+import { BusinessException } from 'src/error-handler/BusinessException';
 
 @Controller('roles')
 export class RolesController {

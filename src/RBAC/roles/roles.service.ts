@@ -9,6 +9,8 @@ import { Role } from 'src/entities/role.entity';
 import { BindPermissionDto } from './dto/bind-permission.dto';
 import { RemovePermissionDto } from './dto/remove-permission.dto';
 import { PermissionsService } from '../permissions/permissions.service';
+import { BusinessException } from 'src/error-handler/BusinessException';
+import { ResService } from 'src/res/res.service';
 
 @Injectable()
 export class RolesService {
@@ -55,7 +57,10 @@ export class RolesService {
   async findOne(id: string) {
     const role = await this.roleRepository.findOneBy({ id });
     if (!role) {
-      throw new Error(`角色 ID ${id} 不存在`);
+      throw new BusinessException(
+        `角色 ID ${id} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
     return role;
   }
@@ -69,7 +74,10 @@ export class RolesService {
     // 查找角色是否存在
     const role = await this.roleRepository.findOneBy({ id });
     if (!role) {
-      throw new Error(`角色 ID ${id} 不存在`);
+      throw new BusinessException(
+        `角色 ID ${id} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     // 更新角色信息
@@ -84,19 +92,21 @@ export class RolesService {
     // 查找角色是否存在
     const role = await this.roleRepository.findOneBy({ id });
     if (!role) {
-      throw new Error(`角色 ID ${id} 不存在`);
+      throw new BusinessException(
+        `角色 ID ${id} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     // 删除角色
     await this.roleRepository.remove(role);
-    return { message: `角色 ID ${id} 已删除` };
+    return id;
   }
 
   /**
    * 查询角色的权限列表
    */
   async findAllPermissions(roleId: string) {
-    console.log('findAllPermissions', roleId);
     // 查找角色是否存在
     const role = await this.roleRepository.findOne({
       where: { id: roleId },
@@ -104,12 +114,14 @@ export class RolesService {
     });
 
     if (!role) {
-      throw new Error(`角色 ID ${roleId} 不存在`);
+      throw new BusinessException(
+        `角色 ID ${roleId} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     const rolePermissions = await role.permissions;
-    console.log('Role:', role);
-    console.log('Permissions:', role?.permissions, rolePermissions);
+
     return rolePermissions;
   }
 
@@ -126,21 +138,30 @@ export class RolesService {
     });
 
     if (!role) {
-      throw new Error(`角色 ID ${roleId} 不存在`);
+      throw new BusinessException(
+        `角色 ID ${roleId} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     // 调用 PermissionsService 检查权限是否存在
     const permission = await this.permissionsService.findOne(permissionId);
 
     if (!permission) {
-      throw new Error(`权限 ID ${permissionId} 不存在`);
+      throw new BusinessException(
+        `权限 ID ${permissionId} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     const rolePermissions = await role.permissions;
 
     // 检查权限是否已绑定
     if (rolePermissions.some((p) => p.id === permissionId)) {
-      throw new Error(`权限 ID ${permissionId} 已绑定到角色 ID ${roleId}`);
+      throw new BusinessException(
+        `权限 ID ${permissionId} 已绑定到角色 ID ${roleId}`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     // 绑定权限
@@ -163,7 +184,10 @@ export class RolesService {
     });
 
     if (!role) {
-      throw new Error(`角色 ID ${roleId} 不存在`);
+      throw new BusinessException(
+        `角色 ID ${roleId} 不存在`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     // 确保 permissions 已加载
@@ -174,7 +198,10 @@ export class RolesService {
       (p) => p.id === permissionId,
     );
     if (permissionIndex === -1) {
-      throw new Error(`权限 ID ${permissionId} 未绑定到角色 ID ${roleId}`);
+      throw new BusinessException(
+        `权限 ID ${permissionId} 未绑定到角色 ID ${roleId}`,
+        ResService.CODES.BadRequest,
+      );
     }
 
     // 移除权限
