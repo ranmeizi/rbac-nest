@@ -11,14 +11,12 @@ import { ResService } from 'src/res/res.service';
 
 @Catch()
 export class ErrorHandlerFilter<T> implements ExceptionFilter {
-  constructor(private readonly res: ResService) {}
+  constructor(private readonly res: ResService) { }
 
   catch(exception: T, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     let errors = null;
-
-    console.log('catch filter', exception);
 
     let code = this.res.Codes.InternalError;
 
@@ -37,12 +35,22 @@ export class ErrorHandlerFilter<T> implements ExceptionFilter {
         const validationErrors = (exceptionResponse as any).message || [];
         errors = validationErrors;
         message = '请求参数验证失败';
+        console.log('bad??');
       } else {
         message =
           typeof exceptionResponse === 'string'
             ? exceptionResponse
             : (exceptionResponse as any).message || message;
+        errors = exception.message;
       }
+    } else {
+      console.log('什么？没拦截住？');
+
+      // TODO 业务错误应该创建自己的 Exception 类型 传递 code message data 进来 这里是兜底
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      errors = exception?.message;
     }
 
     // 返回统一的错误响应格式

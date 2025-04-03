@@ -2,8 +2,10 @@ import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { QueryUserListDto } from '../users/dto/query-user-list.dto';
 import { ResService } from 'src/res/res.service';
+import { QueryRoleListDto } from './dto/query-role-list.dto';
+import { BindPermissionDto } from './dto/bind-permission.dto';
+import { RemovePermissionDto } from './dto/remove-permission.dto';
 
 @Controller('roles')
 export class RolesController {
@@ -21,8 +23,8 @@ export class RolesController {
 
   /** 查询角色列表 */
   @Get('/list')
-  async findAll(@Query() queryUserListDto: QueryUserListDto) {
-    const result = await this.rolesService.findAll(queryUserListDto);
+  async findAll(@Query() queryRoleListDto: QueryRoleListDto) {
+    const result = await this.rolesService.findAll(queryRoleListDto);
     return this.res.success(result);
   }
 
@@ -42,8 +44,31 @@ export class RolesController {
 
   /** 删除角色 */
   @Post('/delete')
-  async remove(@Param('id') id: string) {
+  async remove(@Query('id') id: string) {
     const result = await this.rolesService.remove(id);
+    return this.res.success(result);
+  }
+
+  /** 查询角色的权限列表 */
+  @Get('/getPermissions')
+  async findAllPermissions(@Query('roleId') roleId: string) {
+    const result = await this.rolesService.findAllPermissions(roleId);
+    return this.res.success(result);
+  }
+
+  /** 为角色绑定权限 */
+  @Post('/bindPermission')
+  async bindPermission(@Body() bindPermissionDto: BindPermissionDto) {
+    const result = await this.rolesService.bindPermission(bindPermissionDto);
+    return this.res.success(result);
+  }
+
+  /** 为角色移除权限 */
+  @Post('/removePermission')
+  async removePermission(@Body() removePermissionDto: RemovePermissionDto) {
+    const result = await this.rolesService.removePermission(
+      removePermissionDto,
+    );
     return this.res.success(result);
   }
 }
