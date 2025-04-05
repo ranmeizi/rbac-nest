@@ -11,6 +11,9 @@ import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
 import { AuthModule } from './rbac/auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './guards/jwt/jwt.guard';
 
 @Module({
   imports: [
@@ -29,6 +32,10 @@ import { AuthModule } from './rbac/auth/auth.module';
         autoLoadEntities: true,
       }),
     }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET, // JWT 密钥
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN }, // 令牌有效期
+    }),
     UsersModule,
     RolesModule,
     PermissionsModule,
@@ -38,6 +45,6 @@ import { AuthModule } from './rbac/auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtStrategy],
 })
 export class AppModule {}

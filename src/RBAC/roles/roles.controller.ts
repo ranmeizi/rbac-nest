@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -7,7 +15,9 @@ import { QueryRoleListDto } from './dto/query-role-list.dto';
 import { BindPermissionDto } from './dto/bind-permission.dto';
 import { RemovePermissionDto } from './dto/remove-permission.dto';
 import { BusinessException } from 'src/error-handler/BusinessException';
+import { JwtAuthGuard } from 'src/guards/jwt/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('roles')
 export class RolesController {
   constructor(

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -15,7 +16,9 @@ import { ResService } from 'src/res/res.service';
 import { QueryUserListDto } from './dto/query-user-list.dto';
 import { BindRoleDto } from './dto/bind-role.dto';
 import { RemoveRoleDto } from './dto/remove-role.dto';
+import { JwtAuthGuard } from 'src/guards/jwt/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(

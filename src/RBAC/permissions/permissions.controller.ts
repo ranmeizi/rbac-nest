@@ -7,13 +7,16 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { ResService } from 'src/res/res.service';
 import { QueryPermissionListDto } from './dto/query-permission-list.dto';
+import { JwtAuthGuard } from 'src/guards/jwt/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('permissions')
 export class PermissionsController {
   constructor(

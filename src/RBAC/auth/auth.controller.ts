@@ -16,4 +16,16 @@ export class AuthController {
     const result = await this.authService.login(loginDto);
     return this.res.success(result);
   }
+
+  @Post('/refreshToken')
+  async refreshToken(@Body('refresh_token') refreshToken: string) {
+    const result = await this.authService.refreshToken(refreshToken);
+    return this.res.success(result);
+  }
+
+  @Post('/logout')
+  async logout() {
+    // TODO : 如果需要的话
+    return '';
+  }
 }

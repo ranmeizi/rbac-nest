@@ -23,7 +23,7 @@ export class AuthService {
     // 生成访问令牌 (accessToken)
     const payload = { username: user.username, sub: user.id };
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: expires_in,
+      expiresIn: '1d',
       secret: process.env.JWT_SECRET, // 使用环境变量中的密钥
     });
 
@@ -39,5 +39,34 @@ export class AuthService {
       expires_in: process.env.JWT_EXPIRES_IN || 3600, // 1 小时（以秒为单位）
       token_type: 'Bearer',
     };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_SECRET,
+      });
+      const user = await this.userService.findOne(payload.sub);
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+
+      // 重新生成访问令牌
+      const newAccessToken = this.jwtService.sign(
+        { username: user.username, sub: user.id },
+        {
+          expiresIn: process.env.JWT_EXPIRES_IN || 3600,
+          secret: process.env.JWT_SECRET,
+        },
+      );
+
+      return {
+        access_token: newAccessToken,
+        expires_in: process.env.JWT_EXPIRES_IN || 3600,
+        token_type: 'Bearer',
+      };
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }
