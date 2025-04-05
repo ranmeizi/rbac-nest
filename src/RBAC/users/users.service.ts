@@ -230,4 +230,31 @@ export class UsersService {
 
     return { message: `角色 ID ${roleId} 已从用户 ID ${userId} 中移除` };
   }
+
+  async validateUser(username: string, password: string): Promise<User> | null {
+    // 查找用户是否存在
+    const user = await this.userRepository.findOne({
+      where: { username },
+    });
+    if (!user) {
+      throw new BusinessException(
+        `用户 ${username} 不存在`,
+        ResService.CODES.BadRequest,
+      );
+    }
+    // 验证密码
+    const isPasswordValid = this.validatePassword(
+      password,
+      user.password,
+      user.salt,
+    );
+    if (!isPasswordValid) {
+      throw new BusinessException(
+        `用户名或密码错误`,
+        ResService.CODES.BadRequest,
+      );
+    }
+
+    return user;
+  }
 }

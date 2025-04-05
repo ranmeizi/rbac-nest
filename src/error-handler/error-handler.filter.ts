@@ -51,6 +51,7 @@ export class ErrorHandlerFilter<T> implements ExceptionFilter {
       }
     } else {
       console.log('什么？没拦截住？');
+      console.log('exception', exception);
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
