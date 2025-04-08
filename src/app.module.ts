@@ -11,6 +11,10 @@ import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
 import { WallpaperModule } from './wallpaper/wallpaper.module';
+import { AuthModule } from './rbac/auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './guards/jwt/jwt.guard';
 
 @Module({
   imports: [
@@ -30,13 +34,19 @@ import { WallpaperModule } from './wallpaper/wallpaper.module';
       }),
     }),
     WallpaperModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET, // JWT 密钥
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN }, // 令牌有效期
+    }),
     UsersModule,
     RolesModule,
     PermissionsModule,
     ResModule, // 通用响应体
-    ErrorHandlerModule, CrudModule, // 错误拦截
+    ErrorHandlerModule, // 错误处理
+    CrudModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtStrategy],
 })
 export class AppModule {}
