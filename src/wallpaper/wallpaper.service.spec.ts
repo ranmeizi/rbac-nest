@@ -16,7 +16,8 @@ const mockWallpaper = {
     it: 'test-wallpaper-it',
     ko: 'test-wallpaper-ko',
     de: 'test-wallpaper-de',
-    pt: 'test-wallpaper-pt'
+    pt: 'test-wallpaper-pt',
+    zh: 'test-wallpaper-zh',
   },
   created_at: new Date(),
   updated_at: new Date(),
@@ -124,10 +125,76 @@ describe('WallpaperService', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of wallpapers', async () => {
-      const result = await service.findAll();
-      expect(result).toEqual([mockWallpaper]);
-      expect(repository.find).toHaveBeenCalled();
+    it('should return paginated wallpapers with default parameters', async () => {
+      const queryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([mockWallpaper]),
+        getCount: jest.fn().mockResolvedValue(1)
+      };
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder as any);
+
+      const result = await service.findAll({});
+      expect(result).toEqual({
+        data: [mockWallpaper],
+        total: 1,
+        current: 1,
+        pageSize: 20
+      });
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('wallpaper.created_at', 'DESC');
+    });
+
+    it('should handle custom pagination and sorting', async () => {
+      const queryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([mockWallpaper]),
+        getCount: jest.fn().mockResolvedValue(1)
+      };
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder as any);
+
+      const pagination = {
+        current: 2,
+        pageSize: 10,
+        sortBy: 'updatedAt',
+        sortOrder: 'ASC' as const
+      };
+      const result = await service.findAll(pagination);
+      expect(result).toEqual({
+        data: [mockWallpaper],
+        total: 1,
+        current: 2,
+        pageSize: 10
+      });
+      expect(queryBuilder.skip).toHaveBeenCalledWith(10);
+      expect(queryBuilder.take).toHaveBeenCalledWith(10);
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('wallpaper.updated_at', 'ASC');
+    });
+
+    it('should filter by date range', async () => {
+      const queryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([mockWallpaper]),
+        getCount: jest.fn().mockResolvedValue(1)
+      };
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder as any);
+
+      const startDate = new Date('2023-01-01');
+      const endDate = new Date('2023-12-31');
+      const result = await service.findAll({}, startDate, endDate);
+      
+      expect(result.data).toEqual([mockWallpaper]);
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'wallpaper.created_at BETWEEN :startDate AND :endDate',
+        { startDate, endDate }
+      );
     });
   });
 

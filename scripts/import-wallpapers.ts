@@ -21,7 +21,7 @@ export async function importWallpapers() {
             return;
         }
 
-        const jsonFiles = fs.readdirSync(jsonDataDir).filter(file => file.endsWith('.json')).slice(0, 10);
+        const jsonFiles = fs.readdirSync(jsonDataDir).filter(file => file.endsWith('.json'))
         console.log(`找到${jsonFiles.length}个JSON文件...`);
         // 批量导入数据
         let successCount = 0;
