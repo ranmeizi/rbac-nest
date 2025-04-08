@@ -125,9 +125,12 @@ describe('WallpaperService', () => {
   });
 
   describe('findAll', () => {
-    it('should return paginated wallpapers with default parameters', async () => {
-      const queryBuilder = {
+    let queryBuilder;
+
+    beforeEach(() => {
+      queryBuilder = {
         where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -135,7 +138,9 @@ describe('WallpaperService', () => {
         getCount: jest.fn().mockResolvedValue(1)
       };
       jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder as any);
+    });
 
+    it('should return paginated wallpapers with default parameters', async () => {
       const result = await service.findAll({});
       expect(result).toEqual({
         data: [mockWallpaper],
@@ -147,16 +152,6 @@ describe('WallpaperService', () => {
     });
 
     it('should handle custom pagination and sorting', async () => {
-      const queryBuilder = {
-        where: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([mockWallpaper]),
-        getCount: jest.fn().mockResolvedValue(1)
-      };
-      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder as any);
-
       const pagination = {
         current: 2,
         pageSize: 10,
@@ -176,16 +171,6 @@ describe('WallpaperService', () => {
     });
 
     it('should filter by date range', async () => {
-      const queryBuilder = {
-        where: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([mockWallpaper]),
-        getCount: jest.fn().mockResolvedValue(1)
-      };
-      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder as any);
-
       const startDate = new Date('2023-01-01');
       const endDate = new Date('2023-12-31');
       const result = await service.findAll({}, startDate, endDate);
@@ -195,6 +180,81 @@ describe('WallpaperService', () => {
         'wallpaper.created_at BETWEEN :startDate AND :endDate',
         { startDate, endDate }
       );
+    });
+
+    it('should handle search by keyword', async () => {
+      const searchQuery = {
+        search: 'test keyword',
+        current: 1,
+        pageSize: 20,
+        sortOrder: 'DESC' as const,
+        sortBy: 'createdAt'
+      };
+      await service.findAll(searchQuery);
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        '(wallpaper.description LIKE :search OR wallpaper.alt_description LIKE :search)',
+        { search: '%test keyword%' }
+      );
+    });
+
+    it('should handle empty search string', async () => {
+      const searchQuery = {
+        search: '',
+        current: 1,
+        pageSize: 20,
+        sortOrder: 'DESC'  as const,
+        sortBy: 'createdAt'
+      };
+      await service.findAll(searchQuery);
+      expect(queryBuilder.where).not.toHaveBeenCalled();
+    });
+
+    it('should handle special characters in search', async () => {
+      const searchQuery = {
+        search: '%_特殊字符!@#$',
+        current: 1,
+        pageSize: 20,
+        sortOrder: 'DESC' as const,
+        sortBy: 'createdAt'
+      };
+      await service.findAll(searchQuery);
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        '(wallpaper.description LIKE :search OR wallpaper.alt_description LIKE :search)',
+        { search: '%\%\_特殊字符!@#$%' }
+      );
+    });
+
+    it('should handle invalid date range', async () => {
+      const startDate = new Date('2023-12-31');
+      const endDate = new Date('2023-01-01');
+      const result = await service.findAll({}, startDate, endDate);
+      expect(result.data).toEqual([]);
+    });
+
+    it('should handle extreme pagination values', async () => {
+      const pagination = {
+        current: 999999,
+        pageSize: 100
+      };
+      queryBuilder.getMany.mockResolvedValue([]);
+      queryBuilder.getCount.mockResolvedValue(0);
+      const result = await service.findAll(pagination);
+      expect(result).toEqual({
+        data: [],
+        total: 0,
+        current: 999999,
+        pageSize: 100
+      });
+    });
+
+    it('should handle multiple sort fields', async () => {
+      const pagination = {
+        sortBy: 'likes,created_at',
+        sortOrder: 'DESC' as const
+      };
+      await service.findAll(pagination);
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('wallpaper.likes', 'DESC');
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('wallpaper.created_at', 'DESC');
     });
   });
 
