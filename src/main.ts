@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { config } from 'dotenv';
+
+// 加载对应环境的 .env 文件
+config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +18,6 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT);
 }
 bootstrap();

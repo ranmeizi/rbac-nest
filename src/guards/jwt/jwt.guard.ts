@@ -20,6 +20,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     // payload 是解码后的 JWT 数据
     console.log('JWT payload:', payload);
-    return { userId: payload.sub, username: payload.username };
+    return { userId: payload.userId, username: payload.username };
   }
 }

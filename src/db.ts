@@ -5,7 +5,11 @@ import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission.entity';
 
 // 加载对应环境的 .env 文件
-config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+if (!process.env.DB_HOST) {
+  config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+}
+
+console.log('process.env.NODE_ENV', process.env.NODE_ENV, process.env);
 
 // TypeORM DataSource 配置
 export const dataSourceOptions: DataSourceOptions = {

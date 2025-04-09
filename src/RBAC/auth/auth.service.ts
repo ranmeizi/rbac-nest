@@ -18,12 +18,12 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const expires_in = process.env.JWT_EXPIRES_IN || 3600;
+    const expires_in = (Number(process.env.JWT_EXPIRES_IN) || 3600) * 1000;
 
     // 生成访问令牌 (accessToken)
-    const payload = { username: user.username, sub: user.id };
+    const payload = { username: user.username, sub: '', userId: user.id };
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '1d',
+      expiresIn: expires_in,
       secret: process.env.JWT_SECRET, // 使用环境变量中的密钥
     });
 
@@ -36,7 +36,7 @@ export class AuthService {
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      expires_in: process.env.JWT_EXPIRES_IN || 3600, // 1 小时（以秒为单位）
+      expires_in: expires_in,
       token_type: 'Bearer',
     };
   }
