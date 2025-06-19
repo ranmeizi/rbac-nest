@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Query, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,13 +15,25 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  /** 预注册，告诉前台是注册还是登陆 */
+  async preregister(email: string) {
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    return {
+      type: !existingUser ? 'register' : 'login',
+    };
+  }
   async register(registerDto: RegisterDto) {
     const { username, password, email } = registerDto;
 
-    // 检查用户名是否已存在
-    const existingUser = await this.userRepository.findOne({ where: { username } });
+    // 检查邮箱是否已存在
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
-      throw new UnauthorizedException('用户名已存在');
+      throw new UnauthorizedException('邮箱已存在');
     }
 
     // 生成盐值
@@ -40,9 +52,9 @@ export class AuthService {
     await this.userRepository.save(user);
 
     // 生成JWT令牌
-    const token = this.jwtService.sign({ 
+    const token = this.jwtService.sign({
       userId: user.id,
-      username: user.username 
+      username: user.username,
     });
 
     return {
@@ -76,12 +88,13 @@ export class AuthService {
     }
 
     // 生成JWT令牌
-    const token = this.jwtService.sign({ 
+    const token = this.jwtService.sign({
       userId: user.id,
-      username: user.username 
+      username: user.username,
     });
 
     return {
+      a: 's',
       token,
       user: {
         id: user.id,
@@ -90,4 +103,4 @@ export class AuthService {
       },
     };
   }
-} 
+}

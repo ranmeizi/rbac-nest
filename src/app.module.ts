@@ -16,6 +16,8 @@ import { WallpaperModule } from './wallpaper/wallpaper.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './guards/jwt/jwt.guard';
+import { OssModule } from './oss/oss.module';
+import { WeatherModule } from './weather/weather.module';
 
 @Module({
   imports: [
@@ -51,6 +53,8 @@ import { JwtStrategy } from './guards/jwt/jwt.guard';
     ErrorHandlerModule, // 错误处理
     CrudModule,
     AuthModule,
+    OssModule,
+    WeatherModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],

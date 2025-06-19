@@ -59,13 +59,13 @@ export class UsersService {
 
   /** 创建用户 */
   async create(createUserDto: CreateUserDto) {
-    // 检查用户名是否已存在
-    const existingUser = await this.userRepository.findOneBy({
-      username: createUserDto.username,
+    // 检查邮箱是否已存在
+    const existingEmail = await this.userRepository.findOneBy({
+      username: createUserDto.email,
     });
-    if (existingUser) {
+    if (existingEmail) {
       throw new BusinessException(
-        `用户名 "${createUserDto.username}" 已存在`,
+        `邮箱 "${createUserDto.email}" 已存在`,
         ResService.CODES.BadRequest,
       );
     }

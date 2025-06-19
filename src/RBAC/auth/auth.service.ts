@@ -3,10 +3,14 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { Repository } from 'typeorm';
+import { User } from 'src/entities/user.entity';
+import { BusinessException } from 'src/error-handler/BusinessException';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly userRepository: Repository<User>,
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
@@ -32,7 +36,7 @@ export class AuthService {
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      expires_in: process.env.JWT_EXPIRES_IN || 3600,
+      expires_in: expires_in,
       token_type: 'Bearer',
       user: {
         id: user.id,
