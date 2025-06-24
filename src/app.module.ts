@@ -14,6 +14,8 @@ import { AuthModule } from './rbac/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './guards/jwt/jwt.guard';
+import { EmailModule } from './utils/email/email.module';
+import { RbacModule } from './RBAC/rbac.module';
 
 @Module({
   imports: [
@@ -36,13 +38,12 @@ import { JwtStrategy } from './guards/jwt/jwt.guard';
       secret: process.env.JWT_SECRET, // JWT 密钥
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN }, // 令牌有效期
     }),
-    UsersModule,
-    RolesModule,
-    PermissionsModule,
+    RbacModule,
     ResModule, // 通用响应体
     ErrorHandlerModule, // 错误处理
     CrudModule,
     AuthModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],
