@@ -38,9 +38,6 @@ import { RbacModule } from './RBAC/rbac.module';
       secret: process.env.JWT_SECRET, // JWT 密钥
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN }, // 令牌有效期
     }),
-    // UsersModule,
-    // RolesModule,
-    // PermissionsModule,
     RbacModule,
     ResModule, // 通用响应体
     ErrorHandlerModule, // 错误处理

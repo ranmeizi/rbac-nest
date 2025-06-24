@@ -1,18 +1,137 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { randomString } from '../index';
 import * as crypto from 'crypto';
 import * as dayjs from 'dayjs';
 import axios from 'axios';
+import { BusinessException } from 'src/error-handler/BusinessException';
+import { ResService } from 'src/res/res.service';
+import { MoreThan, Repository } from 'typeorm';
+import {
+  EnumVerifyCodeOperate,
+  EnumVerifyCodeType,
+  VerifyCode,
+} from 'src/entities/verify_code.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { VerifyCodeLog } from 'src/entities/verify_code_log.entity';
 
-const encoder = new TextEncoder();
+enum EnumSendError {
+  正常,
+  发送太快,
+  超出最大次数,
+}
 
 @Injectable()
 export class EmailService {
-  constructor() {}
+  constructor(
+    @InjectRepository(VerifyCode)
+    private readonly codeRepository: Repository<VerifyCode>,
+    @InjectRepository(VerifyCodeLog)
+    private readonly codeLogRepository: Repository<VerifyCodeLog>,
+  ) {}
 
-  async generateCode(){
+  // 校验 IP
+  async checkIp(ip: string): Promise<EnumSendError> {
+    // 判断 log 表中 1天内这个 IP 发送的次数
+    const count = await this.codeLogRepository.count({
+      where: {
+        ip,
+        createdAt: MoreThan(
+          dayjs(dayjs().format('YYYY-MM-DD 00:00:00')).toDate(),
+        ),
+      },
+    });
 
+    if (count > 10) {
+      return EnumSendError.超出最大次数;
+    }
+
+    return EnumSendError.正常;
+  }
+
+  // 生成验证码
+  async genCode(ip: string) {
+    const res = await this.checkIp(ip);
+    if (res === EnumSendError.超出最大次数) {
+      throw new BusinessException(`超出最大次数`, ResService.CODES.BadRequest);
+    }
+
+    // 生成随机验证码
+    const chars = '1234567890'; // 去除易混淆字符
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // 返回 code
+    return code;
+  }
+
+  // 写入
+  async insertCode({
+    code,
+    type,
+    operate,
+    target,
+    ip,
+  }: {
+    code: string;
+    type: EnumVerifyCodeType;
+    operate: EnumVerifyCodeOperate;
+    target: string;
+    ip: string;
+  }) {
+    // 放入 code 表
+    const verifyCode = await this.codeRepository.create({
+      verifyCode: code,
+      type,
+      operate,
+      target,
+    });
+    // 放入 code log 表
+    const verifyCodeLog = await this.codeLogRepository.create({
+      verifyCode: code,
+      type,
+      operate,
+      target,
+      ip,
+    });
+
+    await this.codeRepository.save(verifyCode);
+    await this.codeLogRepository.save(verifyCodeLog);
+  }
+
+  // 消费
+  async verify(target, code: string) {
+    console.log('sss', dayjs().subtract(10, 'm').format('YYYY-MM-DD HH:mm:ss'));
+    const activeCode = await this.codeRepository.find({
+      where: {
+        target,
+        createdAt: MoreThan(dayjs().subtract(10, 'm').toDate()),
+      },
+    });
+
+    const remove = async () => {
+      await this.codeRepository.delete({
+        target,
+      });
+    };
+
+    console.log('kankjan', activeCode);
+    if (activeCode.length > 0) {
+      // 检查是不是有效
+      if (activeCode.find((row) => row.verifyCode === code)) {
+        // 验证成功
+        remove();
+        return true;
+      } else {
+        // 验证失败
+        return false;
+      }
+    } else {
+      // 失效了 删除记录
+      await remove();
+      return false;
+    }
   }
 
   async sendEmailCode(email: string, code: string) {
