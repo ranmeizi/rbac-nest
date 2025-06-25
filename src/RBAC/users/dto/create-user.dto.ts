@@ -43,4 +43,11 @@ export class CreateUserDto {
   @IsNotEmpty({ message: '用户名不能为空' })
   @IsString({ message: '用户名必须是字符串' })
   username: string;
+
+  /**
+   * 邮箱验证码
+   */
+  @IsString()
+  @IsNotEmpty()
+  verifyCode: string;
 }
