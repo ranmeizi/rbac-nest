@@ -15,8 +15,9 @@ import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { ResService } from 'src/res/res.service';
 import { QueryPermissionListDto } from './dto/query-permission-list.dto';
 import { JwtAuthGuard } from 'src/guards/jwt/jwt.guard';
+import { PermissionGuard } from 'src/guards/permission/permission.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionGuard)
 @Controller('permissions')
 export class PermissionsController {
   constructor(

@@ -19,7 +19,7 @@ export class RolesService {
     private readonly roleRepository: Repository<Role>, // 使用 Role 实体
     private readonly permissionsService: PermissionsService, // 注入 PermissionsService
     private readonly crud: CrudService,
-  ) {}
+  ) { }
 
   /**
    * 创建角色
@@ -41,8 +41,9 @@ export class RolesService {
       pagination,
       alias: 'role',
       filter(qb) {
+        qb = qb.where('1=1');
         if (search) {
-          qb = qb.where('role.name LIKE :search', { search: `%${search}%` });
+          qb = qb.andWhere('role.name LIKE :search', { search: `%${search}%` });
         }
         return qb;
       },

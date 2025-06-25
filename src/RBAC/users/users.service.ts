@@ -22,7 +22,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private readonly crud: CrudService,
     private readonly rolesService: RolesService,
-  ) {}
+  ) { }
 
   // 创建 password 返回加密后的 password 和 盐
   genStorePassword(password: string): [string, string] {
@@ -94,12 +94,13 @@ export class UsersService {
       pagination,
       alias: 'user',
       filter(qb) {
+        qb = qb.where('1=1');
         if (!!status) {
-          qb = qb.where('user.status = :status', { status });
+          qb = qb.andWhere('user.status = :status', { status });
         }
 
         if (!!search) {
-          qb = qb.where('user.username LIKE :search', {
+          qb = qb.andWhere('user.username LIKE :search', {
             search: `%${search}%`,
           });
         }

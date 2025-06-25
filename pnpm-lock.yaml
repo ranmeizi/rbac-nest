@@ -14,6 +14,9 @@ importers:
       '@nestjs/axios':
         specifier: ^4.0.0
         version: 4.0.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(axios@1.9.0)(rxjs@7.8.2)
+      '@nestjs/axios':
+        specifier: ^4.0.0
+        version: 4.0.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(axios@1.10.0)(rxjs@7.8.2)
       '@nestjs/common':
         specifier: ^10.0.0
         version: 10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)
@@ -40,6 +43,7 @@ importers:
         version: 6.4.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.15)(reflect-metadata@0.1.14)
       '@nestjs/typeorm':
         specifier: ^11.0.0
+<<<<<<< HEAD
         version: 11.0.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.15)(reflect-metadata@0.1.14)(rxjs@7.8.2)(typeorm@0.3.21(mysql2@3.14.0)(reflect-metadata@0.1.14)(ts-node@10.9.2(@types/node@20.17.28)(typescript@5.8.2)))
       '@types/ali-oss':
         specifier: ^6.16.11
@@ -56,6 +60,12 @@ importers:
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
+=======
+        version: 11.0.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.15(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/platform-express@10.4.15)(reflect-metadata@0.1.14)(rxjs@7.8.2))(reflect-metadata@0.1.14)(rxjs@7.8.2)(typeorm@0.3.21(mysql2@3.14.0)(reflect-metadata@0.1.14)(ts-node@10.9.2(@types/node@20.17.28)(typescript@5.8.2)))
+      axios:
+        specifier: ^1.10.0
+        version: 1.10.0
+>>>>>>> base/main
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -538,10 +548,13 @@ packages:
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
     engines: {node: '>=8'}
 
+<<<<<<< HEAD
   '@mapbox/node-pre-gyp@1.0.11':
     resolution: {integrity: sha512-Yhlar6v9WQgUp/He7BdgzOz8lqMQ8sU+jkCq7Wx8Myc5YFJLbEe7lgui/V7G1qB1DJykHSGwreceSaD60Y0PUQ==}
     hasBin: true
 
+=======
+>>>>>>> base/main
   '@nestjs/axios@4.0.0':
     resolution: {integrity: sha512-1cB+Jyltu/uUPNQrpUimRHEQHrnQrpLzVj6dU3dgn6iDDDdahr10TgHFGTmw5VuJ9GzKZsCLDL78VSwJAs/9JQ==}
     peerDependencies:
@@ -1103,8 +1116,13 @@ packages:
     resolution: {integrity: sha512-NZKeq9AfyQvEeNlN0zSYAaWrmBffJh3IELMZfRpJVWgrpEbtEpnjvzqBPf+mxoI287JohRDoa+/nsfqqiZmF6g==}
     engines: {node: '>= 6.0.0'}
 
+<<<<<<< HEAD
   axios@1.9.0:
     resolution: {integrity: sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==}
+=======
+  axios@1.10.0:
+    resolution: {integrity: sha512-/1xYAC4MP/HEG+3duIhFr4ZQXR4sQXOIe+o6sdqzeykGLx6Upp/1p8MHqhINOvGeP7xyNHe7tsiJByc4SSVUxw==}
+>>>>>>> base/main
 
   babel-jest@29.7.0:
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
@@ -2772,9 +2790,12 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
+<<<<<<< HEAD
   pump@3.0.2:
     resolution: {integrity: sha512-tUPXtzlGM8FE3P0ZL6DVs/3P58k9nk8/jZeQCurTJylQA8qFYzHFfhBJkuqyE0FifOsQ0uKWekiZ5g8wtr28cw==}
 
+=======
+>>>>>>> base/main
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
@@ -4059,6 +4080,7 @@ snapshots:
 
   '@lukeed/csprng@1.1.0': {}
 
+<<<<<<< HEAD
   '@mapbox/node-pre-gyp@1.0.11':
     dependencies:
       detect-libc: 2.0.3
@@ -4078,6 +4100,12 @@ snapshots:
     dependencies:
       '@nestjs/common': 10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       axios: 1.9.0
+=======
+  '@nestjs/axios@4.0.0(@nestjs/common@10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2))(axios@1.10.0)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 10.4.15(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      axios: 1.10.0
+>>>>>>> base/main
       rxjs: 7.8.2
 
   '@nestjs/cli@10.4.9':
@@ -4750,7 +4778,11 @@ snapshots:
 
   aws-ssl-profiles@1.1.2: {}
 
+<<<<<<< HEAD
   axios@1.9.0:
+=======
+  axios@1.10.0:
+>>>>>>> base/main
     dependencies:
       follow-redirects: 1.15.9
       form-data: 4.0.2
@@ -6639,11 +6671,14 @@ snapshots:
 
   proxy-from-env@1.1.0: {}
 
+<<<<<<< HEAD
   pump@3.0.2:
     dependencies:
       end-of-stream: 1.4.4
       once: 1.4.0
 
+=======
+>>>>>>> base/main
   punycode@2.3.1: {}
 
   pure-rand@6.1.0: {}

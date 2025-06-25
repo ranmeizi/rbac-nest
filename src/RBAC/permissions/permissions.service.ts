@@ -13,7 +13,7 @@ export class PermissionsService {
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>, // 使用 Permission 实体
     private readonly crud: CrudService,
-  ) {}
+  ) { }
 
   /**
    * 创建权限
@@ -35,8 +35,9 @@ export class PermissionsService {
       pagination,
       alias: 'permission',
       filter(qb) {
+        qb = qb.where('1=1');
         if (search) {
-          qb = qb.where('permission.name LIKE :search', {
+          qb = qb.andWhere('permission.name LIKE :search', {
             search: `%${search}%`,
           });
         }
