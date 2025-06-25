@@ -43,6 +43,7 @@ export class ErrorHandlerFilter<T> implements ExceptionFilter {
         message = (exceptionResponse as any).message;
         errors = (exceptionResponse as any).error;
       } else {
+        code = status.toString();
         message =
           typeof exceptionResponse === 'string'
             ? exceptionResponse

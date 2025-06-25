@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { ResService } from 'src/res/res.service';
 import { LoginDto } from './dto/login.dto';
 import { EmailService } from 'src/utils/email/email.service';
-import { SignupDto } from './dto/signup.dto';
+import { SendEmailDto, SignupDto } from './dto/signup.dto';
 import { BusinessException } from 'src/error-handler/BusinessException';
 import { UsersService } from '../users/users.service';
 import {
@@ -40,7 +40,7 @@ export class AuthController {
   }
 
   @Post('/sendEmailCode')
-  async sendEmail(@Body() { email }: { email: string }, @Req() req: any) {
+  async sendEmail(@Body() { email }: SendEmailDto, @Req() req: any) {
     // 获取IP地址
     const ip =
       req.headers['x-forwarded-for']?.toString().split(',')[0].trim() ||

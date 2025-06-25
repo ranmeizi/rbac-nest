@@ -16,8 +16,9 @@ import { BindPermissionDto } from './dto/bind-permission.dto';
 import { RemovePermissionDto } from './dto/remove-permission.dto';
 import { BusinessException } from 'src/error-handler/BusinessException';
 import { JwtAuthGuard } from 'src/guards/jwt/jwt.guard';
+import { PermissionGuard } from 'src/guards/permission/permission.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionGuard)
 @Controller('roles')
 export class RolesController {
   constructor(
