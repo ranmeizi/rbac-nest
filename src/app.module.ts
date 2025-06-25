@@ -16,6 +16,9 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './guards/jwt/jwt.guard';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
+import { UsersService } from './rbac/users/users.service';
+import { RolesService } from './rbac/roles/roles.service';
+import { PermissionsService } from './rbac/permissions/permissions.service';
 
 @Module({
   imports: [
@@ -46,6 +49,12 @@ import { RbacModule } from './RBAC/rbac.module';
     EmailModule,
   ],
   controllers: [AppController],
-  providers: [AppService, JwtStrategy],
+  providers: [
+    AppService,
+    JwtStrategy,
+    UsersService,
+    RolesService,
+    PermissionsService,
+  ],
 })
 export class AppModule {}

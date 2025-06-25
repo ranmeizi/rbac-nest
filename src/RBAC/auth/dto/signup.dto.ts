@@ -20,3 +20,9 @@ export class SignupDto {
   firstName?: string;
   lastName?: string;
 }
+
+export class SendEmailDto {
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+}
