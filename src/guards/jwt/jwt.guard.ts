@@ -3,7 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { UsersService } from 'src/rbac/users/users.service';
+import { UsersService } from 'src/RBAC/users/users.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {}

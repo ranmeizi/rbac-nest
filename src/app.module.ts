@@ -20,9 +20,9 @@ import { OssModule } from './oss/oss.module';
 import { WeatherModule } from './weather/weather.module';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
-import { UsersService } from './rbac/users/users.service';
-import { RolesService } from './rbac/roles/roles.service';
-import { PermissionsService } from './rbac/permissions/permissions.service';
+import { UsersService } from './RBAC/users/users.service';
+import { RolesService } from './RBAC/roles/roles.service';
+import { PermissionsService } from './RBAC/permissions/permissions.service';
 
 @Module({
   imports: [
