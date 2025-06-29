@@ -94,7 +94,6 @@ export class AuthService {
     });
 
     return {
-      a: 's',
       token,
       user: {
         id: user.id,

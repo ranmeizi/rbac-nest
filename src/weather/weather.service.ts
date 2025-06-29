@@ -10,19 +10,23 @@ export class WeatherService {
   constructor(private readonly httpService: HttpService) {}
 
   async getWeather(city: string): Promise<any> {
-    const url = `${weatherUrl}?location=${city}&lang=zh`;
     const url2 = `${weatherCityUrl}?location=${city}`;
     const token = await generateJWTToken();
     try {
-      const response = await firstValueFrom(
-        this.httpService.get(url, {
+      const responsetwo = await firstValueFrom(
+        this.httpService.get(url2, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }),
       );
-      const responsetwo = await firstValueFrom(
-        this.httpService.get(url2, {
+      const url = `${weatherUrl}?location=${parseFloat(
+        responsetwo.data?.location?.[0]?.lon,
+      ).toFixed(2)},${parseFloat(responsetwo.data?.location?.[0]?.lat).toFixed(
+        2,
+      )}&lang=zh`;
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

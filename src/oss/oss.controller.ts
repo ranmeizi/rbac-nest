@@ -3,7 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { OssService } from './oss.service';
 
 @Controller('oss')
-// @UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'))
 export class OssController {
   constructor(private oss: OssService) {}
   @Get('signature')

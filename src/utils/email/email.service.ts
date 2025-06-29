@@ -100,43 +100,32 @@ export class EmailService {
     await this.codeLogRepository.save(verifyCodeLog);
   }
 
-  // 消费
   async verify(target, code: string) {
-    console.log('sss', dayjs().subtract(10, 'm').format('YYYY-MM-DD HH:mm:ss'));
+    // 查询该邮箱的最新验证码
     const activeCode = await this.codeRepository.find({
-      where: {
-        target,
-        createdAt: MoreThan(dayjs().subtract(10, 'm').toDate()),
-      },
+      where: { target },
+      order: { createdAt: 'DESC' },
+      take: 1,
     });
 
-    const remove = async () => {
-      await this.codeRepository.delete({
-        target,
-      });
-    };
-
-    console.log('kankjan', activeCode);
     if (activeCode.length > 0) {
-      // 检查是不是有效
-      if (activeCode.find((row) => row.verifyCode === code)) {
-        // 验证成功
-        remove();
+      const latestCode = activeCode[0];
+
+      if (latestCode.verifyCode === code) {
+        // 验证成功，删除记录
+        await this.codeRepository.delete({ target });
         return true;
-      } else {
-        // 验证失败
-        return false;
       }
-    } else {
-      // 失效了 删除记录
-      await remove();
-      return false;
     }
+
+    // 验证失败，删除记录
+    await this.codeRepository.delete({ target });
+    return false;
   }
 
   async sendEmailCode(email: string, code: string) {
     const params: any = {
-      AccountName: 'bozi@mail.boboan.net',
+      AccountName: 'quantum@quantumdash.link',
       AddressType: 1,
       ReplyToAddress: false,
       ToAddress: email,
@@ -145,82 +134,185 @@ export class EmailService {
 <html lang="zh-cn">
 <head>
   <meta charset="UTF-8">
-  <title>波波世界 - 邮箱验证码</title>
+  <title>Quantum - 邮箱验证</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
-      background: linear-gradient(135deg, #0f2027, #2c5364, #1c92d2);
-      font-family: 'Segoe UI', 'Arial', sans-serif;
       margin: 0;
       padding: 0;
-      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      color: #1d1d1f;
+      line-height: 1.47;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .container {
-      max-width: 420px;
-      margin: 48px auto;
-      background: rgba(30, 40, 60, 0.95);
-      border-radius: 18px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-      padding: 36px 32px 28px 32px;
-      text-align: center;
-      border: 1.5px solid rgba(255,255,255,0.08);
+    
+    .email-container {
+      max-width: 400px;
+      margin: 80px auto;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.06);
     }
-    .logo {
-      font-size: 2.2em;
-      font-weight: bold;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, #00c6ff, #0072ff, #f7971e, #ffd200);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 18px;
-      animation: shine 2s infinite linear alternate;
-    }
-    @keyframes shine {
-      0% { filter: brightness(1); }
-      100% { filter: brightness(1.3); }
-    }
-    .title {
-      font-size: 1.3em;
-      margin-bottom: 18px;
-      letter-spacing: 1px;
-      color: #ffd200;
-      font-weight: 500;
-    }
+    
     .content {
-      font-size: 1.1em;
+      padding: 48px 40px;
+      text-align: center;
+    }
+    
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      background: #1d1d1f;
+      border-radius: 14px;
       margin-bottom: 32px;
-      color: #e0e0e0;
-      letter-spacing: 0.5px;
     }
-    .code-box {
-      display: inline-block;
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-      color: #fff;
-      font-size: 2.1em;
-      letter-spacing: 8px;
-      font-weight: bold;
-      padding: 16px 32px;
+    
+    .logo-icon::before {
+      content: 'Q';
+      font-weight: 700;
+      font-size: 24px;
+      color: white;
+    }
+    
+    .brand-name {
+      font-size: 32px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin: 0 0 8px;
+      letter-spacing: -0.5px;
+    }
+    
+    .brand-subtitle {
+      font-size: 15px;
+      color: #86868b;
+      margin: 0 0 40px;
+      font-weight: 400;
+    }
+    
+    .welcome-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin: 0 0 12px;
+      letter-spacing: -0.2px;
+    }
+    
+    .welcome-text {
+      font-size: 15px;
+      color: #6e6e73;
+      margin: 0 0 40px;
+      line-height: 1.5;
+    }
+    
+    .verification-section {
+      background: #f6f6f6;
       border-radius: 12px;
-      box-shadow: 0 2px 12px 0 rgba(0, 198, 255, 0.18);
-      margin-bottom: 24px;
-      user-select: all;
-      font-family: 'Consolas', 'Menlo', monospace;
+      padding: 24px;
+      margin: 0 0 32px;
     }
-    .footer {
-      margin-top: 32px;
-      font-size: 0.95em;
-      color: #b0b0b0;
+    
+    .verification-label {
+      font-size: 13px;
+      color: #86868b;
+      margin: 0 0 12px;
+      font-weight: 500;
+      text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+    
+    .verification-code {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin: 0 0 8px;
+      letter-spacing: 6px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      user-select: all;
+      -webkit-user-select: all;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+    
+    .verification-code:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .expiry-notice {
+      font-size: 13px;
+      color: #86868b;
+      margin: 0;
+      font-weight: 400;
+    }
+    
+    .security-notice {
+      font-size: 14px;
+      color: #86868b;
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 480px) {
+      .email-container {
+        margin: 40px 20px;
+        border-radius: 16px;
+      }
+      
+      .content {
+        padding: 40px 32px;
+      }
+      
+      .brand-name {
+        font-size: 28px;
+      }
+      
+      .verification-code {
+        font-size: 28px;
+        letter-spacing: 4px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">波波世界</div>
-    <div class="title">邮箱验证码</div>
-    <div class="content">这是您的验证码</div>
-    <div class="code-box">${code}</div>
-    <div class="footer">如果不是您本人操作，请忽略此邮件。</div>
+  <div class="email-container">
+    <div class="content">
+      <div class="logo">
+        <div class="logo-icon"></div>
+      </div>
+      
+      <h1 class="brand-name">Quantum</h1>
+      <p class="brand-subtitle">新标签页浏览体验</p>
+      
+      <h2 class="welcome-title">验证您的邮箱</h2>
+      <p class="welcome-text">
+        请使用下方验证码完成注册
+      </p>
+      
+      <div class="verification-section">
+        <p class="verification-label">验证码</p>
+        <p class="verification-code">${code}</p>
+        <p class="expiry-notice">10 分钟内有效</p>
+      </div>
+      
+      <p class="security-notice">
+        如果这不是您的操作，请忽略此邮件。
+      </p>
+    </div>
   </div>
 </body>
 </html>`
