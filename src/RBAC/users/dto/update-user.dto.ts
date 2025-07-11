@@ -36,4 +36,11 @@ export class UpdateUserDto {
     message: '状态必须是 active、inactive 或 locked',
   }) // 验证状态值
   status?: string;
+
+  /**
+   * 用户头像URL
+   */
+  @IsOptional() // 可选字段
+  @IsString({ message: '头像URL必须是字符串' }) // 验证字符串
+  avatar?: string;
 }

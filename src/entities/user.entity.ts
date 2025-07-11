@@ -60,6 +60,14 @@ export class User {
   })
   lastName: string;
 
+  @Column({
+    type: 'varchar',
+    length: 500,
+    comment: '用户头像URL',
+    nullable: true,
+  })
+  avatar: string;
+
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable() // TypeORM 会自动创建 user_roles 关联表
   roles: Promise<Role[]>;

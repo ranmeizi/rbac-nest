@@ -21,6 +21,9 @@ export class UserDto {
   lastName: string;
 
   @Expose()
+  avatar: string;
+
+  @Expose()
   @Transform(({ value }) =>
     value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : null,
   )
