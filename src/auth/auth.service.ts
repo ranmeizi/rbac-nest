@@ -36,6 +36,10 @@ export class AuthService {
       throw new UnauthorizedException('邮箱已存在');
     }
 
+    // 如果没有提供用户名，则使用邮箱作为用户名
+    const finalUsername = username || email;
+
+
     // 生成盐值
     const salt = await bcrypt.genSalt(10);
     // 加密密码
@@ -43,7 +47,7 @@ export class AuthService {
 
     // 创建新用户
     const user = this.userRepository.create({
-      username,
+      username: finalUsername,
       password: hashedPassword,
       email,
       salt,
@@ -63,23 +67,24 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar,
       },
     };
   }
 
   async login(loginDto: LoginDto) {
-    const { username, password } = loginDto;
+    const { email, password } = loginDto;
 
     // 查找用户
-    const user = await this.userRepository.findOne({ where: { username } });
+    const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
-      throw new UnauthorizedException('用户名或密码错误');
+      throw new UnauthorizedException('邮箱或密码错误');
     }
 
     // 验证密码
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('用户名或密码错误');
+      throw new UnauthorizedException('邮箱或密码错误');
     }
 
     // 检查用户状态
@@ -99,6 +104,7 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar,
       },
     };
   }

@@ -20,6 +20,7 @@ import { OssModule } from './oss/oss.module';
 import { WeatherModule } from './weather/weather.module';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
+import { UserModule } from './user/user.module';
 import { UsersService } from './RBAC/users/users.service';
 import { RolesService } from './RBAC/roles/roles.service';
 import { PermissionsService } from './RBAC/permissions/permissions.service';
@@ -55,6 +56,7 @@ import { PermissionsService } from './RBAC/permissions/permissions.service';
     RolesModule,
     PermissionsModule,
     RbacModule,
+    UserModule,
     ResModule, // 通用响应体
     ErrorHandlerModule, // 错误处理
     CrudModule,
