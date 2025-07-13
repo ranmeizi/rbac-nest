@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { WallpaperController } from './wallpaper.controller';
 import { WallpaperService } from './wallpaper.service';
-import { Wallpaper } from './entities/wallpaper.entity';
+import { Wallpaper360Provider } from './providers/wallpaper-360.provider';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Wallpaper])],
+  imports: [HttpModule],
   controllers: [WallpaperController],
-  providers: [WallpaperService],
+  providers: [WallpaperService, Wallpaper360Provider],
   exports: [WallpaperService],
 })
-export class WallpaperModule {}
+export class WallpaperModule {} 

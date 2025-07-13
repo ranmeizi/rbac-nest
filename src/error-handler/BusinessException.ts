@@ -2,7 +2,11 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { ResService } from 'src/res/res.service';
 
 export class BusinessException extends HttpException {
-  constructor(message: string, statusCode: string, error: any = null) {
+  constructor(
+    message: string,
+    statusCode: HttpStatus | string | number,
+    error: any = null,
+  ) {
     super(
       {
         statusCode,

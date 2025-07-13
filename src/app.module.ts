@@ -11,8 +11,6 @@ import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
 import { AuthModule } from './auth/auth.module';
-import { WallpaperModule } from './wallpaper/wallpaper.module';
-
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './guards/jwt/jwt.guard';
@@ -23,6 +21,7 @@ import { RbacModule } from './RBAC/rbac.module';
 import { UsersService } from './RBAC/users/users.service';
 import { RolesService } from './RBAC/roles/roles.service';
 import { PermissionsService } from './RBAC/permissions/permissions.service';
+import { WallpaperModule } from './wallpaper/wallpaper.module';
 
 @Module({
   imports: [
@@ -50,7 +49,7 @@ import { PermissionsService } from './RBAC/permissions/permissions.service';
       }),
       inject: [ConfigService],
     }),
-    WallpaperModule,
+
     UsersModule,
     RolesModule,
     PermissionsModule,
@@ -62,6 +61,7 @@ import { PermissionsService } from './RBAC/permissions/permissions.service';
     OssModule,
     WeatherModule,
     EmailModule,
+    WallpaperModule,
   ],
   controllers: [AppController],
   providers: [

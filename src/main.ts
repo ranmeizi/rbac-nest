@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { importWallpapers } from 'scripts/import-wallpapers';
 async function bootstrap() {
   console.log(
     process.env.DB_USERNAME,
@@ -15,7 +14,18 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get('PORT') || 9999;
-
+  // 配置 CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'chrome-extension://*', // 允许所有 Chrome Extension
+      /^chrome-extension:\/\/.+$/, // 使用正则表达式匹配 Chrome Extension
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  });
   // 启用全局验证管道
   app.useGlobalPipes(
     new ValidationPipe({

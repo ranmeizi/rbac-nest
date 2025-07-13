@@ -1,77 +1,177 @@
-import { Get, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Wallpaper } from './entities/wallpaper.entity';
-import { PaginationDto } from '../utils/crud/dto/pagination.dto';
-import { getAssumeRole } from 'src/config/oss-config';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  IWallpaperProvider,
+  WallpaperInfo,
+  WallpaperCategory,
+  HotSearchItem,
+  PaginatedResponse,
+} from './interfaces/wallpaper-provider.interface';
+import { Wallpaper360Provider } from './providers/wallpaper-360.provider';
+import { WallpaperProvider } from './dto/query-wallpaper.dto';
+
 @Injectable()
 export class WallpaperService {
-  constructor(
-    @InjectRepository(Wallpaper)
-    private wallpaperRepository: Repository<Wallpaper>,
-  ) {}
+  private readonly logger = new Logger(WallpaperService.name);
+  private readonly providers: Map<string, IWallpaperProvider> = new Map();
 
-  async findAll(
-    pagination: PaginationDto,
-    startDate?: Date,
-    endDate?: Date,
-  ): Promise<{ data: Wallpaper[]; total: number; current: number; pageSize: number }> {
-    const { current = 1, pageSize = 20, sortBy = 'createdAt', sortOrder = 'DESC' } = pagination;
-    const skip = (current - 1) * pageSize;
-    const queryBuilder = this.wallpaperRepository.createQueryBuilder('wallpaper');
+  constructor(private readonly wallpaper360Provider: Wallpaper360Provider) {
+    // 注册所有壁纸提供者
+    this.registerProvider(this.wallpaper360Provider);
+  }
 
-    if (startDate && endDate) {
-      queryBuilder.where('wallpaper.created_at BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
+  /**
+   * 注册壁纸提供者
+   */
+  private registerProvider(provider: IWallpaperProvider): void {
+    this.providers.set(provider.getProviderName(), provider);
+    this.logger.log(`Registered provider: ${provider.getProviderName()}`);
+  }
+
+  /**
+   * 获取壁纸提供者
+   */
+  private getProvider(providerName: string): IWallpaperProvider {
+    const provider = this.providers.get(providerName);
+    if (!provider) {
+      throw new Error(`Provider ${providerName} not found`);
+    }
+    return provider;
+  }
+
+  /**
+   * 获取所有可用的壁纸提供者
+   */
+  getAvailableProviders(): string[] {
+    return Array.from(this.providers.keys());
+  }
+
+  /**
+   * 获取指定提供者的所有壁纸类别
+   */
+  async getAllCategories(
+    providerName: string = WallpaperProvider.WALLPAPER_360,
+  ): Promise<WallpaperCategory[]> {
+    const provider = this.getProvider(providerName);
+    return provider.getAllCategories();
+  }
+
+  /**
+   * 根据类别获取壁纸列表
+   */
+  async getWallpapersByCategory(
+    providerName: string = WallpaperProvider.WALLPAPER_360,
+    cid: number | string = 0,
+    start = 0,
+    count = 10,
+  ): Promise<PaginatedResponse<WallpaperInfo>> {
+    const provider = this.getProvider(providerName);
+    return provider.getWallpapersByCategory(cid, start, count);
+  }
+
+  /**
+   * 搜索壁纸
+   */
+  async searchWallpapers(
+    keyword: string,
+    providerName: string = WallpaperProvider.WALLPAPER_360,
+    start = 0,
+    count = 10,
+  ): Promise<PaginatedResponse<WallpaperInfo>> {
+    const provider = this.getProvider(providerName);
+    return provider.searchWallpapers(keyword, start, count);
+  }
+
+  /**
+   * 获取热门搜索关键词
+   */
+  async getHotSearchKeywords(
+    providerName: string = WallpaperProvider.WALLPAPER_360,
+  ): Promise<HotSearchItem[]> {
+    const provider = this.getProvider(providerName);
+    return provider.getHotSearchKeywords();
+  }
+
+  /**
+   * 聚合多个提供者的壁纸数据
+   */
+  async aggregateWallpapers(
+    providers: string[],
+    cid = 'new',
+    start = 0,
+    count = 10,
+  ): Promise<PaginatedResponse<WallpaperInfo>> {
+    const results: WallpaperInfo[] = [];
+
+    for (const providerName of providers) {
+      try {
+        const provider = this.getProvider(providerName);
+        const response = await provider.getWallpapersByCategory(
+          cid,
+          start,
+          count,
+        );
+        results.push(...response.data);
+      } catch (error) {
+        this.logger.error(
+          `Failed to fetch wallpapers from provider ${providerName}`,
+          error,
+        );
+      }
     }
 
-    // 将驼峰命名转换为下划线命名，以匹配数据库字段
-    const dbField = sortBy.replace(/([A-Z])/g, '_$1').toLowerCase();
-
-    const [data, total] = await Promise.all([
-      queryBuilder
-        .skip(skip)
-        .take(pageSize)
-        .orderBy(`wallpaper.${dbField}`, sortOrder)
-        .getMany(),
-      queryBuilder.getCount()
-    ]);
+    // 按创建时间排序
+    results.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
     return {
-      data,
-      total,
-      current,
-      pageSize
+      data: results.slice(start, start + count),
+      total: results.length,
+      page: Math.floor(start / count) + 1,
+      pageSize: count,
+      hasNext: start + count < results.length,
+      hasPrev: start > 0,
     };
   }
 
-  async findOne(id: string): Promise<Wallpaper> {
-    const wallpaper = await this.wallpaperRepository.findOne({ where: { id } });
-    if (!wallpaper) {
-      throw new NotFoundException(`Wallpaper with ID ${id} not found`);
+  /**
+   * 聚合多个提供者的搜索结果
+   */
+  async aggregateSearchResults(
+    keyword: string,
+    providers: string[],
+    start = 0,
+    count = 10,
+  ): Promise<PaginatedResponse<WallpaperInfo>> {
+    const results: WallpaperInfo[] = [];
+
+    for (const providerName of providers) {
+      try {
+        const provider = this.getProvider(providerName);
+        const response = await provider.searchWallpapers(keyword, start, count);
+        results.push(...response.data);
+      } catch (error) {
+        this.logger.error(
+          `Failed to search wallpapers from provider ${providerName}`,
+          error,
+        );
+      }
     }
-    return wallpaper;
-  }
 
-  async create(wallpaper: Wallpaper): Promise<Wallpaper> {
-    return this.wallpaperRepository.save(wallpaper);
-  }
+    // 按创建时间排序
+    results.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
-  async update(id: string, wallpaper: Partial<Wallpaper>): Promise<Wallpaper> {
-    const existingWallpaper = await this.findOne(id);
-    const updatedWallpaper = { ...existingWallpaper, ...wallpaper };
-    return this.wallpaperRepository.save(updatedWallpaper);
-  }
-
-  async remove(id: string): Promise<void> {
-    const result = await this.wallpaperRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Wallpaper with ID ${id} not found`);
-    }
-  }
-  async getPrevwAccessKey() {
-    return await getAssumeRole('wallpaper', 30 * 24 * 60 * 60 * 1000)
+    return {
+      data: results.slice(start, start + count),
+      total: results.length,
+      page: Math.floor(start / count) + 1,
+      pageSize: count,
+      hasNext: start + count < results.length,
+      hasPrev: start > 0,
+    };
   }
 }
