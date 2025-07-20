@@ -25,6 +25,13 @@ export class ResService {
     });
   }
 
+  successMessage(msg = 'success') {
+    return {
+      code: ResService.CODES.Success,
+      message: msg,
+    };
+  }
+
   error(code: string, msg = '', data = null) {
     return this.json({
       code,

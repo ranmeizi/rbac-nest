@@ -1,10 +1,9 @@
-import { IsString, MinLength, MaxLength } from 'class-validator';
+import { IsString, MinLength, MaxLength, IsEmail, IsNotEmpty } from 'class-validator';
 
 export class LoginDto {
-  @IsString()
-  @MinLength(4)
-  @MaxLength(20)
-  username: string;
+  @IsEmail({}, { message: '请输入正确的邮箱格式' })
+  @IsNotEmpty({ message: '邮箱不能为空' })
+  email: string;
 
   @IsString()
   @MinLength(6)
