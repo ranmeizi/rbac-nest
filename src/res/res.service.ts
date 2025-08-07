@@ -7,6 +7,8 @@ export class ResService {
     Success: '000000', // 成功
     BadRequest: '000400', // 请求参数错误
     InternalError: '000500', // 服务器内部错误
+
+    OAuthFastSignInNeedVerifyEmail: '001101', // 快捷登录时，需要验证email
   };
 
   private json({ code, msg, data }) {

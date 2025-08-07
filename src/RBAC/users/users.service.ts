@@ -14,6 +14,8 @@ import { RemoveRoleDto } from './dto/remove-role.dto';
 import { RolesService } from '../roles/roles.service';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from './dto/expose-user.dto';
+import { IDTokenDto } from 'src/oauth/google-oauth/dto/google.dto';
+import { secureRandomString } from 'src/utils';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +24,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private readonly crud: CrudService,
     private readonly rolesService: RolesService,
-  ) { }
+  ) {}
 
   // 创建 password 返回加密后的 password 和 盐
   genStorePassword(password: string): [string, string] {
@@ -59,18 +61,17 @@ export class UsersService {
 
   /** 创建用户 */
   async create(createUserDto: CreateUserDto) {
-    // 检查用户名是否已存在
+    // 检查email是否已存在
     const existingUser = await this.userRepository.findOneBy({
-      username: createUserDto.username,
+      email: createUserDto.email,
     });
     if (existingUser) {
       throw new BusinessException(
-        `用户名 "${createUserDto.username}" 已存在`,
+        `邮箱 "${createUserDto.email}" 已存在`,
         ResService.CODES.BadRequest,
       );
     }
 
-    // TODO 生成 psw 和 salt
     const [password, salt] = this.genStorePassword(createUserDto.password);
 
     const user = this.userRepository.create({
@@ -100,7 +101,7 @@ export class UsersService {
         }
 
         if (!!search) {
-          qb = qb.andWhere('user.username LIKE :search', {
+          qb = qb.andWhere('user.email LIKE :search', {
             search: `%${search}%`,
           });
         }
@@ -118,6 +119,14 @@ export class UsersService {
       ...list,
       list: transformedList,
     };
+  }
+
+  /**
+   * 使用 email 查询用户
+   */
+  async findByEmail(email: string) {
+    const user = await this.userRepository.findOneBy({ email });
+    return plainToInstance(UserDto, user, { excludeExtraneousValues: true });
   }
 
   /**
@@ -257,14 +266,14 @@ export class UsersService {
     return { message: `角色 ID ${roleId} 已从用户 ID ${userId} 中移除` };
   }
 
-  async validateUser(username: string, password: string): Promise<User> | null {
+  async validateUser(email: string, password: string): Promise<UserDto> | null {
     // 查找用户是否存在
     const user = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
     if (!user) {
       throw new BusinessException(
-        `用户 ${username} 不存在`,
+        `用户 ${email} 不存在`,
         ResService.CODES.BadRequest,
       );
     }
@@ -281,7 +290,7 @@ export class UsersService {
       );
     }
 
-    return user;
+    return plainToInstance(UserDto, user, { excludeExtraneousValues: true });
   }
 
   /** 获取用户的所有权限 */
@@ -309,5 +318,41 @@ export class UsersService {
 
     // 去重并返回
     return [...new Set(permissionNames)];
+  }
+
+  /**
+   * 谷歌信息快速注册
+   *
+   * 随机密码
+   */
+  async fastSignUpByGoogleProfile(profile: IDTokenDto) {
+    // 检查email是否已存在
+    const existingUser = await this.userRepository.findOneBy({
+      email: profile.email,
+    });
+    if (existingUser) {
+      throw new BusinessException(
+        `邮箱 "${profile.email}" 已存在`,
+        ResService.CODES.BadRequest,
+      );
+    }
+
+    // 随机密码
+    const random_password = secureRandomString(6);
+
+    const [password, salt] = this.genStorePassword(random_password);
+
+    const user = this.userRepository.create({
+      email: profile.email,
+      nickname: profile.name,
+      picture: profile.picture,
+      password,
+      salt,
+      status: EnumUserStatus.ACTIVE,
+    });
+
+    const res = await this.userRepository.save(user);
+
+    return plainToInstance(UserDto, res, { excludeExtraneousValues: true });
   }
 }

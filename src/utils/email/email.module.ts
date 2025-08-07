@@ -4,6 +4,7 @@ import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { VerifyCode } from 'src/entities/verify_code.entity';
 import { VerifyCodeLog } from 'src/entities/verify_code_log.entity';
+import { EmailController } from './email.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([VerifyCode, VerifyCodeLog])],
@@ -12,5 +13,6 @@ import { VerifyCodeLog } from 'src/entities/verify_code_log.entity';
     EmailService,
     TypeOrmModule.forFeature([VerifyCode, VerifyCodeLog]),
   ],
+  controllers: [EmailController],
 })
 export class EmailModule {}

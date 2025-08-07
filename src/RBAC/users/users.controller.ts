@@ -3,13 +3,9 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   Query,
   UseGuards,
-  Req,
-  BadRequestException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -25,7 +21,6 @@ import {
 } from 'src/decorators/currentUser.decorator';
 import { UserDto } from './dto/expose-user.dto';
 import { PermissionGuard } from 'src/guards/permission/permission.guard';
-import { Permission } from 'src/decorators/permission.decorator';
 
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @Controller('users')
@@ -102,7 +97,6 @@ export class UsersController {
   async getCurrentUserPermissions(
     @CurrentUserPermission() permissions: string[],
   ) {
-    console.log('kk', permissions);
     return this.res.success(permissions);
   }
 }

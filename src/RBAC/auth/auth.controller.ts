@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Headers, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ResService } from 'src/res/res.service';
 import { LoginDto } from './dto/login.dto';
@@ -10,6 +10,8 @@ import {
   EnumVerifyCodeOperate,
   EnumVerifyCodeType,
 } from 'src/entities/verify_code.entity';
+import { GoogleFastSignInDto } from 'src/oauth/google-oauth/dto/oauth2.dto';
+import { GoogleOauthService } from 'src/oauth/google-oauth/google-oauth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -18,6 +20,7 @@ export class AuthController {
     private readonly res: ResService,
     private readonly userService: UsersService,
     private readonly emailService: EmailService,
+    private readonly googleOauthService: GoogleOauthService,
   ) {}
 
   /** 用户登录 */
@@ -77,5 +80,62 @@ export class AuthController {
     await this.userService.create(signupDto);
 
     return this.res.success('');
+  }
+
+  @Post('/oauth/google-login')
+  async googleLogin(
+    @Body() { code }: GoogleFastSignInDto,
+    @Headers('user-agent') ua: string,
+  ) {
+    const profile = await this.googleOauthService.getProfile(code);
+
+    // 检查 google 邮箱有没有校验
+    if (!profile.email_verified) {
+      // 没有邮箱认证的 google 账号不能用
+      throw new BusinessException(
+        '您的google账户邮箱未认证,请在google进行邮箱认证后方可使用google登陆',
+        ResService.CODES.BadRequest,
+      );
+    }
+
+    // 检查 google_account 表有无数据
+    const googleAccount =
+      await this.googleOauthService.findGoogleAccountByGoogleSub(profile.sub);
+
+    // 有无 user
+    const userpagi = await this.userService.findAll({
+      search: profile.email,
+    });
+
+    if (!googleAccount) {
+      if (userpagi.total === 0) {
+        // 无数据 调用注册
+        await this.authService.__prevent_abuse__googleOAuthFastSignUpSendEmail({
+          profile,
+          ua,
+        });
+        // 终止
+        throw new BusinessException(
+          '还没有注册,请打开您google绑定邮箱接收验证邮件后方可登录',
+          ResService.CODES.OAuthFastSignInNeedVerifyEmail,
+        );
+      } else {
+        // 无数据 调用email校验绑定
+        await this.authService.__prevent_abuse__googleOAuthBindAccountSendEmail({
+          profile,
+          ua,
+        });
+        // 终止
+        throw new BusinessException(
+          '该Email已注册,请打开您google绑定邮箱接收验证邮件后绑定登陆',
+          ResService.CODES.OAuthFastSignInNeedVerifyEmail,
+        );
+      }
+    }
+
+    const user = userpagi.list[0];
+
+    // 登陆成功
+    return this.authService.__prevent_abuse__OAuthSignToken(user);
   }
 }
