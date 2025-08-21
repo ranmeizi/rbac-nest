@@ -61,13 +61,13 @@ export class UsersService {
 
   /** 创建用户 */
   async create(createUserDto: CreateUserDto) {
-    // 检查email是否已存在
+    // 检查用户名是否已存在
     const existingUser = await this.userRepository.findOneBy({
-      email: createUserDto.email,
+      username: createUserDto.username,
     });
     if (existingUser) {
       throw new BusinessException(
-        `邮箱 "${createUserDto.email}" 已存在`,
+        `用户 "${createUserDto.username}" 已存在`,
         ResService.CODES.BadRequest,
       );
     }
@@ -101,9 +101,13 @@ export class UsersService {
         }
 
         if (!!search) {
-          qb = qb.andWhere('user.email LIKE :search', {
-            search: `%${search}%`,
-          });
+          qb = qb
+            .andWhere('user.email LIKE :search', {
+              search: `%${search}%`,
+            })
+            .andWhere('user.nickname LIKE :search', {
+              search: `%${search}%`,
+            });
         }
 
         return qb;
@@ -266,17 +270,22 @@ export class UsersService {
     return { message: `角色 ID ${roleId} 已从用户 ID ${userId} 中移除` };
   }
 
-  async validateUser(email: string, password: string): Promise<UserDto> | null {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserDto> | null {
+    console.log('ss', username, password);
     // 查找用户是否存在
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { username },
     });
     if (!user) {
       throw new BusinessException(
-        `用户 ${email} 不存在`,
+        `用户 ${username} 不存在`,
         ResService.CODES.BadRequest,
       );
     }
+    console.log('validate user=', user);
     // 验证密码
     const isPasswordValid = this.validatePassword(
       password,
@@ -350,6 +359,20 @@ export class UsersService {
       salt,
       status: EnumUserStatus.ACTIVE,
     });
+
+    const res = await this.userRepository.save(user);
+
+    return plainToInstance(UserDto, res, { excludeExtraneousValues: true });
+  }
+
+  /** 修改密码 */
+  async savePassword(userId: string, newpassword: string) {
+    const [password, salt] = this.genStorePassword(newpassword);
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+
+    user.password = password;
+    user.salt = salt;
 
     const res = await this.userRepository.save(user);
 

@@ -49,12 +49,6 @@ import { OnceContextModule } from './utils/once_context/once_context.module';
     OnceContextModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    JwtStrategy,
-    UsersService,
-    RolesService,
-    PermissionsService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

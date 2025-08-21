@@ -12,11 +12,13 @@ import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { OAuth2GoogleEntity } from 'src/entities/oa_google.entity';
 import { UserDto } from 'src/rbac/users/dto/expose-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class GoogleOauthService {
   constructor(
     private readonly jwtService: JwtService,
+    @InjectRepository(OAuth2GoogleEntity)
     private readonly oaGoogleAccountRepository: Repository<OAuth2GoogleEntity>,
   ) {}
 

@@ -1,11 +1,14 @@
 import { IsString, IsNotEmpty } from 'class-validator';
 
-export class SignupDto {
+/**
+ * 修改密码
+ */
+export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty()
-  username: string;
+  oldPassword: string;
 
   @IsString()
   @IsNotEmpty()
-  password: string;
+  newPassword: string;
 }

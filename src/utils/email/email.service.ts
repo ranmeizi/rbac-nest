@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { randomString } from '../index';
-import * as crypto from 'crypto';
 import * as dayjs from 'dayjs';
 import axios from 'axios';
+import * as crypto from 'crypto';
 import { BusinessException } from 'src/error-handler/BusinessException';
 import { ResService } from 'src/res/res.service';
 import { MoreThan, Repository } from 'typeorm';
@@ -13,59 +13,39 @@ import {
 } from 'src/entities/verify_code.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VerifyCodeLog } from 'src/entities/verify_code_log.entity';
-import { EmailVerifyContext, EnumEVCType } from './dto/email.dto';
+import {
+  GoogleOAuth2VerifyCallbackContext,
+  EmailCallbackContext,
+  EnumEVCType,
+} from './dto/email.dto';
 import { AuthService } from 'src/rbac/auth/auth.service';
 import { UsersService } from 'src/rbac/users/users.service';
 import { GoogleOauthService } from 'src/oauth/google-oauth/google-oauth.service';
 import { URLSearchParams } from 'url';
+import { IDTokenDto } from 'src/oauth/google-oauth/dto/google.dto';
+import { OnceContextService } from '../once_context/once_context.service';
+import { encryptSearch } from './crypto.util';
 
 enum EnumSendError {
   正常,
   发送太快,
   超出最大次数,
 }
-
 @Injectable()
 export class EmailService {
-  static EMAIL_QUERY_AES = {
-    key: '4db2ca928ae39a05',
-    iv: '891bf307f17fe230',
-  };
-
   constructor(
     @InjectRepository(VerifyCode)
     private readonly codeRepository: Repository<VerifyCode>,
     @InjectRepository(VerifyCodeLog)
     private readonly codeLogRepository: Repository<VerifyCodeLog>,
+    @Inject(forwardRef(() => AuthService))
     private readonly authServices: AuthService,
+    @Inject()
     private readonly userServices: UsersService,
+    @Inject(forwardRef(() => GoogleOauthService))
     private readonly googleOauthServices: GoogleOauthService,
+    private readonly onceContextService: OnceContextService,
   ) {}
-
-  // 参数加密
-  _encryptSearch(params: Record<string, any>) {
-    const plainText = JSON.stringify(params);
-    // 密钥和 IV 必须是 8 字节
-    const cipher = crypto.createCipheriv(
-      'aes-128-cbc',
-      Buffer.from(EmailService.EMAIL_QUERY_AES.key),
-      Buffer.from(EmailService.EMAIL_QUERY_AES.iv),
-    );
-    let encrypted = cipher.update(plainText, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
-    return encrypted;
-  }
-
-  _decryptSearch(encryptedText: string): Record<string, any> {
-    const decipher = crypto.createDecipheriv(
-      'aes-128-cbc',
-      Buffer.from(EmailService.EMAIL_QUERY_AES.key),
-      Buffer.from(EmailService.EMAIL_QUERY_AES.iv),
-    );
-    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-    return JSON.parse(decrypted);
-  }
 
   // 校验 IP
   async checkIp(ip: string): Promise<EnumSendError> {
@@ -140,12 +120,14 @@ export class EmailService {
 
   // 验证
   async verify(target, code: string) {
+    console.log('verify', target, code);
     const activeCode = await this.codeRepository.find({
       where: {
         target,
         createdAt: MoreThan(dayjs().subtract(10, 'm').toDate()),
       },
     });
+    console.log('activeCode', activeCode);
 
     const remove = async () => {
       await this.codeRepository.delete({
@@ -441,7 +423,7 @@ export class EmailService {
     <div class="logo">Boboan.net</div>
     <div class="title">邮箱认证</div>
     <div class="content">请点击下方链接完成您的邮箱认证：</div>
-    <a class="verify-link" href="${callbackUrl}">${callbackUrl}</a>
+    <a class="verify-link" target="_blank" rel="noopener noreferrer" href="${callbackUrl}">${callbackUrl}</a>
     <div class="footer">如果不是您本人操作，请忽略此邮件。</div>
   </div>
 </body>
@@ -459,29 +441,93 @@ export class EmailService {
     return crypto.createHash('sha256').update('').digest('hex');
   }
 
+  /**
+   * [防滥用标识]
+   * 确保用户授权code有效再调用
+   * google 快捷注册 发送注册验证邮件
+   */
+  async __prevent_abuse__googleOAuthFastSignUpSendEmail({
+    profile,
+    ua,
+  }: {
+    profile: IDTokenDto;
+    ua: string;
+  }) {
+    // 创建给callback的上下文
+    const context: GoogleOAuth2VerifyCallbackContext = {
+      type: EnumEVCType.FAST_LOGIN_SIGNUP,
+      profile,
+      ua,
+    };
+
+    // 存入临时表
+    const temp_code = await this.onceContextService.set({ context });
+
+    // 把 code 加入callback参数
+    const z = encryptSearch({ code: temp_code });
+
+    const callbackUrl = `${process.env.BACK_HOST}/email/callback?z=${z}`;
+
+    // 发送邮件 等待回调
+    await this.sendEmailVerify(profile.email, callbackUrl);
+  }
+
+  /**
+   * [防滥用标识]
+   * 确保用户授权code有效再调用
+   * google 快捷注册 发送绑定验证邮件
+   */
+  async __prevent_abuse__googleOAuthBindAccountSendEmail({
+    profile,
+    ua,
+  }: {
+    profile: IDTokenDto;
+    ua: string;
+  }) {
+    // 创建给callback的上下文
+    const context: GoogleOAuth2VerifyCallbackContext = {
+      type: EnumEVCType.FAST_LOGIN_BIND,
+      profile,
+      ua,
+    };
+
+    // 存入临时表
+    const temp_code = await this.onceContextService.set({ context });
+
+    // 把 code 加入callback参数
+    const z = encryptSearch({ code: temp_code });
+
+    const callbackUrl = `${process.env.BACK_HOST}/email/callback?z=${z}`;
+
+    // 发送邮件 等待回调
+    await this.sendEmailVerify(profile.email, callbackUrl);
+  }
+
   // 处理 邮箱认证的callback
-  async handleEmailVerifyCallback(
-    context: EmailVerifyContext,
+  async handleCallback(
+    context: EmailCallbackContext,
     ua: string,
   ): Promise<{ params?: URLSearchParams }> {
     const params = new URLSearchParams();
     switch (context.type) {
       case EnumEVCType.BIND:
         // 调用绑定
+        // TODO
         break;
       case EnumEVCType.FAST_LOGIN_SIGNUP:
         {
+          const G_context = context as GoogleOAuth2VerifyCallbackContext;
           // 创建用户
           const user = await this.userServices.fastSignUpByGoogleProfile(
-            context.profile,
+            G_context.profile,
           );
           // 绑定账号
           await this.googleOauthServices.bindUserGoogleAccountByProfile(
             user,
-            context.profile,
+            G_context.profile,
           );
           // 同一设备？生成登录 code
-          if (context.ua === ua) {
+          if (G_context.ua === ua) {
             // 生成code
             const code = await this.authServices.getLoginCode(user.id, ua);
 
@@ -492,17 +538,18 @@ export class EmailService {
 
       case EnumEVCType.FAST_LOGIN_BIND:
         {
+          const G_context = context as GoogleOAuth2VerifyCallbackContext;
           // 用 email 查询用户
           const user = await this.userServices.findByEmail(
-            context.profile.email,
+            G_context.profile.email,
           );
           // 绑定账号
           await this.googleOauthServices.bindUserGoogleAccountByProfile(
             user,
-            context.profile,
+            G_context.profile,
           );
           // 同一设备？生成登录 code
-          if (context.ua === ua) {
+          if (G_context.ua === ua) {
             // 生成code
             const code = await this.authServices.getLoginCode(user.id, ua);
 
@@ -519,8 +566,7 @@ export class EmailService {
 
   // 处理回调的重定向 从 hash 中传值
   async finishEmailVerifyRedirect(params: URLSearchParams) {
-    const url = `${process.env.WEB_HOST}/o2/verify-res#${params.toString()}`;
-
+    const url = `${process.env.FRONT_HOST}/o2/verify-res#${params.toString()}`;
     return url;
   }
 }

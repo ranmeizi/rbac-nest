@@ -8,7 +8,7 @@ import {
   BeforeUpdate,
 } from 'typeorm';
 
-@Entity('once_context')
+@Entity('ut_once_context')
 export class OnceContextEntity {
   @PrimaryGeneratedColumn('uuid') // 独立主键（与业务无关）
   code: string;
@@ -20,7 +20,12 @@ export class OnceContextEntity {
   @Column({ type: 'int' })
   ttl: number;
 
-  @Column({ type: 'varchar', length: 1000, comment: '唯一标识' })
+  @Column({
+    type: 'varchar',
+    length: 1000,
+    comment: '唯一标识',
+    nullable: true,
+  })
   uniqueId?: string;
 
   @CreateDateColumn({ name: 'create_at' })
@@ -29,12 +34,12 @@ export class OnceContextEntity {
   @UpdateDateColumn({ name: 'update_at' })
   updatedAt: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'datetime', nullable: true, name: 'expires_at' })
   expiresAt: Date;
 
   @BeforeInsert()
-  @BeforeUpdate()
   setExpiresAt() {
-    this.expiresAt = new Date(this.createdAt.getTime() + this.ttl * 1000);
+    const baseTime = new Date();
+    this.expiresAt = new Date(baseTime.getTime() + this.ttl * 1000);
   }
 }

@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { OnceContextEntity } from 'src/entities/ut_once_context';
+import { BusinessException } from 'src/error-handler/BusinessException';
+import { ResService } from 'src/res/res.service';
 import { LessThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class OnceContextService {
   constructor(
+    @InjectRepository(OnceContextEntity)
     private readonly onceContextRepository: Repository<OnceContextEntity>,
   ) {}
 
@@ -44,6 +48,11 @@ export class OnceContextService {
     await this.removeExpired();
     // 拿code获取 context
     const row = await this.onceContextRepository.findOneBy({ code });
+
+    if (!row) {
+      throw new BusinessException('Code 过期', ResService.CODES.BadRequest);
+    }
+
     // 删除 code
     await this.remove(row.code);
     // 返回 context

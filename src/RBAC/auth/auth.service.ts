@@ -1,14 +1,9 @@
-import { Body, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { TokenDto } from './dto/token.dto';
 import { UserDto } from '../users/dto/expose-user.dto';
-import { GoogleOauthService } from 'src/oauth/google-oauth/google-oauth.service';
-import { GoogleFastSignInDto } from 'src/oauth/google-oauth/dto/oauth2.dto';
-import { EmailService } from 'src/utils/email/email.service';
-import { IDTokenDto } from 'src/oauth/google-oauth/dto/google.dto';
-import { EmailVerifyContext, EnumEVCType } from 'src/utils/email/dto/email.dto';
 import { OnceContextService } from 'src/utils/once_context/once_context.service';
 import { BusinessException } from 'src/error-handler/BusinessException';
 import { ResService } from 'src/res/res.service';
@@ -18,8 +13,6 @@ export class AuthService {
   constructor(
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly emailService: EmailService,
-    private readonly googleOauthService: GoogleOauthService,
     private readonly onceContextService: OnceContextService,
   ) {}
 
@@ -54,13 +47,17 @@ export class AuthService {
 
   /** 登录 */
   async login(loginDto: LoginDto) {
+    // 兼容一下 有用户名用用户名，没有用email
+
     const user = await this.userService.validateUser(
-      loginDto.email,
+      loginDto.username,
       loginDto.password,
     );
     if (!user) {
       throw new UnauthorizedException();
     }
+
+    console.log('???', user);
 
     return this._signToken(user, true);
   }
@@ -83,72 +80,10 @@ export class AuthService {
 
   /**
    * [防滥用标识]
-   * 确保用户授权code有效再调用
-   * google 快捷注册 发送注册验证邮件
-   */
-  async __prevent_abuse__googleOAuthFastSignUpSendEmail({
-    profile,
-    ua,
-  }: {
-    profile: IDTokenDto;
-    ua: string;
-  }) {
-    // 创建给callback的上下文
-    const context: EmailVerifyContext = {
-      type: EnumEVCType.SIGNUP_LOGIN,
-      profile,
-      ua,
-    };
-
-    // 存入临时表
-    const temp_code = await this.onceContextService.set({ context });
-
-    // 把 code 加入callback参数
-    const z = this.emailService._encryptSearch({ code: temp_code });
-
-    const callbackUrl = `${process.env.WEB_HOST}/email/verify?z=${z}`;
-
-    // 发送邮件 等待回调
-    await this.emailService.sendEmailVerify(profile.email, callbackUrl);
-  }
-
-  /**
-   * [防滥用标识]
-   * 确保用户授权code有效再调用
-   * google 快捷注册 发送绑定验证邮件
-   */
-  async __prevent_abuse__googleOAuthBindAccountSendEmail({
-    profile,
-    ua,
-  }: {
-    profile: IDTokenDto;
-    ua: string;
-  }) {
-    // 创建给callback的上下文
-    const context: EmailVerifyContext = {
-      type: EnumEVCType.BIND_LOGIN,
-      profile,
-      ua,
-    };
-
-    // 存入临时表
-    const temp_code = await this.onceContextService.set({ context });
-
-    // 把 code 加入callback参数
-    const z = this.emailService._encryptSearch({ code: temp_code });
-
-    const callbackUrl = `${process.env.WEB_HOST}/email/verify?z=${z}`;
-
-    // 发送邮件 等待回调
-    await this.emailService.sendEmailVerify(profile.email, callbackUrl);
-  }
-
-  /**
-   * [防滥用标识]
    * 你要确保一定满足登录条件再调这个
    */
   async __prevent_abuse__OAuthSignToken(user: UserDto) {
-    return this._signToken(user);
+    return await this._signToken(user, true);
   }
 
   /**
@@ -164,7 +99,7 @@ export class AuthService {
     const user = await this.userService.findOne(context.userId);
 
     // token
-    return this._signToken(user);
+    return await this._signToken(user, true);
   }
 
   /**
