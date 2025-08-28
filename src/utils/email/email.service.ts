@@ -127,7 +127,6 @@ export class EmailService {
         createdAt: MoreThan(dayjs().subtract(10, 'm').toDate()),
       },
     });
-    console.log('activeCode', activeCode);
 
     const remove = async () => {
       await this.codeRepository.delete({

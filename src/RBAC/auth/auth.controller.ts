@@ -23,7 +23,10 @@ import { GoogleOauthService } from 'src/oauth/google-oauth/google-oauth.service'
 import { EmailSignupDto, SendEmailDto } from './dto/email-signup.dto';
 import { UserDto } from '../users/dto/expose-user.dto';
 import { CurrentUser } from 'src/decorators/currentUser.decorator';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import {
+  ChangePasswordDto,
+  ForgotChangePasswordDto,
+} from './dto/change-password.dto';
 import { JwtAuthGuard } from 'src/guards/jwt/jwt.guard';
 
 @Controller('auth')
@@ -191,6 +194,27 @@ export class AuthController {
 
     // 修改成新密码
     await this.userService.savePassword(user.id, changePasswordDto.newPassword);
+
+    return this.res.success(null, '修改成功');
+  }
+
+  @Post('/forgotChangePassword')
+  async forgotChangePassword(
+    @Body() forgotChangePasswordDto: ForgotChangePasswordDto,
+  ) {
+    const { email, code, password } = forgotChangePasswordDto;
+
+    // 先检查email code 是否有效
+    const res = await this.emailService.verify(email, code);
+
+    if (!res) {
+      throw new BusinessException('code过期', ResService.CODES.BadRequest);
+    }
+
+    // 获取用户
+    const user = await this.userService.findByEmail(email);
+    // 修改密码
+    await this.userService.savePassword(user.id, password);
 
     return this.res.success(null, '修改成功');
   }

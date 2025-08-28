@@ -12,3 +12,17 @@ export class ChangePasswordDto {
   @IsNotEmpty()
   newPassword: string;
 }
+
+export class ForgotChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
