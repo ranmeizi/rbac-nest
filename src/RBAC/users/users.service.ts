@@ -14,6 +14,8 @@ import { RemoveRoleDto } from './dto/remove-role.dto';
 import { RolesService } from '../roles/roles.service';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from './dto/expose-user.dto';
+import { IDTokenDto } from 'src/oauth/google-oauth/dto/google.dto';
+import { secureRandomString } from 'src/utils';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +24,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private readonly crud: CrudService,
     private readonly rolesService: RolesService,
-  ) { }
+  ) {}
 
   // 创建 password 返回加密后的 password 和 盐
   genStorePassword(password: string): [string, string] {
@@ -65,12 +67,11 @@ export class UsersService {
     });
     if (existingUser) {
       throw new BusinessException(
-        `用户名 "${createUserDto.username}" 已存在`,
+        `用户 "${createUserDto.username}" 已存在`,
         ResService.CODES.BadRequest,
       );
     }
 
-    // TODO 生成 psw 和 salt
     const [password, salt] = this.genStorePassword(createUserDto.password);
 
     const user = this.userRepository.create({
@@ -100,9 +101,13 @@ export class UsersService {
         }
 
         if (!!search) {
-          qb = qb.andWhere('user.username LIKE :search', {
-            search: `%${search}%`,
-          });
+          qb = qb
+            .andWhere('user.email LIKE :search', {
+              search: `%${search}%`,
+            })
+            .andWhere('user.nickname LIKE :search', {
+              search: `%${search}%`,
+            });
         }
 
         return qb;
@@ -118,6 +123,14 @@ export class UsersService {
       ...list,
       list: transformedList,
     };
+  }
+
+  /**
+   * 使用 email 查询用户
+   */
+  async findByEmail(email: string) {
+    const user = await this.userRepository.findOneBy({ email });
+    return plainToInstance(UserDto, user, { excludeExtraneousValues: true });
   }
 
   /**
@@ -257,7 +270,11 @@ export class UsersService {
     return { message: `角色 ID ${roleId} 已从用户 ID ${userId} 中移除` };
   }
 
-  async validateUser(username: string, password: string): Promise<User> | null {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserDto> | null {
+    console.log('ss', username, password);
     // 查找用户是否存在
     const user = await this.userRepository.findOne({
       where: { username },
@@ -268,6 +285,7 @@ export class UsersService {
         ResService.CODES.BadRequest,
       );
     }
+    console.log('validate user=', user);
     // 验证密码
     const isPasswordValid = this.validatePassword(
       password,
@@ -281,7 +299,7 @@ export class UsersService {
       );
     }
 
-    return user;
+    return plainToInstance(UserDto, user, { excludeExtraneousValues: true });
   }
 
   /** 获取用户的所有权限 */
@@ -309,5 +327,55 @@ export class UsersService {
 
     // 去重并返回
     return [...new Set(permissionNames)];
+  }
+
+  /**
+   * 谷歌信息快速注册
+   *
+   * 随机密码
+   */
+  async fastSignUpByGoogleProfile(profile: IDTokenDto) {
+    // 检查email是否已存在
+    const existingUser = await this.userRepository.findOneBy({
+      email: profile.email,
+    });
+    if (existingUser) {
+      throw new BusinessException(
+        `邮箱 "${profile.email}" 已存在`,
+        ResService.CODES.BadRequest,
+      );
+    }
+
+    // 随机密码
+    const random_password = secureRandomString(6);
+
+    const [password, salt] = this.genStorePassword(random_password);
+
+    const user = this.userRepository.create({
+      email: profile.email,
+      nickname: profile.name,
+      picture: profile.picture,
+      password,
+      salt,
+      status: EnumUserStatus.ACTIVE,
+    });
+
+    const res = await this.userRepository.save(user);
+
+    return plainToInstance(UserDto, res, { excludeExtraneousValues: true });
+  }
+
+  /** 修改密码 */
+  async savePassword(userId: string, newpassword: string) {
+    const [password, salt] = this.genStorePassword(newpassword);
+
+    const user = await this.userRepository.findOneBy({ id: userId });
+
+    user.password = password;
+    user.salt = salt;
+
+    const res = await this.userRepository.save(user);
+
+    return plainToInstance(UserDto, res, { excludeExtraneousValues: true });
   }
 }

@@ -7,11 +7,18 @@ import { PermissionsService } from '../permissions/permissions.service';
 import { Permission } from 'src/entities/permission.entity';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { permission } from 'process';
+import { CrudModule } from 'src/utils/crud/crud.module';
+import { ResModule } from 'src/res/res.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Role]), PermissionsModule],
+  imports: [
+    TypeOrmModule.forFeature([Role]),
+    PermissionsModule,
+    CrudModule,
+    ResModule,
+  ],
   controllers: [RolesController],
-  providers: [RolesService, PermissionsService],
-  exports: [RolesService, TypeOrmModule.forFeature([Role])],
+  providers: [RolesService],
+  exports: [RolesService],
 })
 export class RolesModule {}

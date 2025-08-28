@@ -13,7 +13,7 @@ export class PermissionsService {
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>, // 使用 Permission 实体
     private readonly crud: CrudService,
-  ) { }
+  ) {}
 
   /**
    * 创建权限

@@ -19,7 +19,7 @@ export class RolesService {
     private readonly roleRepository: Repository<Role>, // 使用 Role 实体
     private readonly permissionsService: PermissionsService, // 注入 PermissionsService
     private readonly crud: CrudService,
-  ) { }
+  ) {}
 
   /**
    * 创建角色

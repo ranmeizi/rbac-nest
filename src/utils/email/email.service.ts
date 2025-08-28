@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { randomString } from '../index';
-import * as crypto from 'crypto';
 import * as dayjs from 'dayjs';
 import axios from 'axios';
+import * as crypto from 'crypto';
 import { BusinessException } from 'src/error-handler/BusinessException';
 import { ResService } from 'src/res/res.service';
 import { MoreThan, Repository } from 'typeorm';
@@ -13,13 +13,24 @@ import {
 } from 'src/entities/verify_code.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VerifyCodeLog } from 'src/entities/verify_code_log.entity';
+import {
+  GoogleOAuth2VerifyCallbackContext,
+  EmailCallbackContext,
+  EnumEVCType,
+} from './dto/email.dto';
+import { AuthService } from 'src/rbac/auth/auth.service';
+import { UsersService } from 'src/rbac/users/users.service';
+import { GoogleOauthService } from 'src/oauth/google-oauth/google-oauth.service';
+import { URLSearchParams } from 'url';
+import { IDTokenDto } from 'src/oauth/google-oauth/dto/google.dto';
+import { OnceContextService } from '../once_context/once_context.service';
+import { encryptSearch } from './crypto.util';
 
 enum EnumSendError {
   正常,
   发送太快,
   超出最大次数,
 }
-
 @Injectable()
 export class EmailService {
   constructor(
@@ -27,6 +38,13 @@ export class EmailService {
     private readonly codeRepository: Repository<VerifyCode>,
     @InjectRepository(VerifyCodeLog)
     private readonly codeLogRepository: Repository<VerifyCodeLog>,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authServices: AuthService,
+    @Inject()
+    private readonly userServices: UsersService,
+    @Inject(forwardRef(() => GoogleOauthService))
+    private readonly googleOauthServices: GoogleOauthService,
+    private readonly onceContextService: OnceContextService,
   ) {}
 
   // 校验 IP
@@ -100,9 +118,9 @@ export class EmailService {
     await this.codeLogRepository.save(verifyCodeLog);
   }
 
-  // 消费
+  // 验证
   async verify(target, code: string) {
-    console.log('sss', dayjs().subtract(10, 'm').format('YYYY-MM-DD HH:mm:ss'));
+    console.log('verify', target, code);
     const activeCode = await this.codeRepository.find({
       where: {
         target,
@@ -116,7 +134,6 @@ export class EmailService {
       });
     };
 
-    console.log('kankjan', activeCode);
     if (activeCode.length > 0) {
       // 检查是不是有效
       if (activeCode.find((row) => row.verifyCode === code)) {
@@ -134,98 +151,15 @@ export class EmailService {
     }
   }
 
-  async sendEmailCode(email: string, code: string) {
+  /** 调用阿里发送邮件 */
+  private async _sendEmail(email: string, HtmlBody: string) {
     const params: any = {
       AccountName: 'bozi@mail.boboan.net',
       AddressType: 1,
       ReplyToAddress: false,
       ToAddress: email,
       Subject: 'Code',
-      HtmlBody: `<!DOCTYPE html>
-<html lang="zh-cn">
-<head>
-  <meta charset="UTF-8">
-  <title>波波世界 - 邮箱验证码</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      background: linear-gradient(135deg, #0f2027, #2c5364, #1c92d2);
-      font-family: 'Segoe UI', 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      color: #fff;
-    }
-    .container {
-      max-width: 420px;
-      margin: 48px auto;
-      background: rgba(30, 40, 60, 0.95);
-      border-radius: 18px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-      padding: 36px 32px 28px 32px;
-      text-align: center;
-      border: 1.5px solid rgba(255,255,255,0.08);
-    }
-    .logo {
-      font-size: 2.2em;
-      font-weight: bold;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, #00c6ff, #0072ff, #f7971e, #ffd200);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 18px;
-      animation: shine 2s infinite linear alternate;
-    }
-    @keyframes shine {
-      0% { filter: brightness(1); }
-      100% { filter: brightness(1.3); }
-    }
-    .title {
-      font-size: 1.3em;
-      margin-bottom: 18px;
-      letter-spacing: 1px;
-      color: #ffd200;
-      font-weight: 500;
-    }
-    .content {
-      font-size: 1.1em;
-      margin-bottom: 32px;
-      color: #e0e0e0;
-      letter-spacing: 0.5px;
-    }
-    .code-box {
-      display: inline-block;
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-      color: #fff;
-      font-size: 2.1em;
-      letter-spacing: 8px;
-      font-weight: bold;
-      padding: 16px 32px;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px 0 rgba(0, 198, 255, 0.18);
-      margin-bottom: 24px;
-      user-select: all;
-      font-family: 'Consolas', 'Menlo', monospace;
-    }
-    .footer {
-      margin-top: 32px;
-      font-size: 0.95em;
-      color: #b0b0b0;
-      letter-spacing: 0.5px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">波波世界</div>
-    <div class="title">邮箱验证码</div>
-    <div class="content">这是您的验证码</div>
-    <div class="code-box">${code}</div>
-    <div class="footer">如果不是您本人操作，请忽略此邮件。</div>
-  </div>
-</body>
-</html>`
-        .replaceAll(/\r\n/g, '')
-        .replaceAll(/\n/g, ''),
+      HtmlBody,
     };
 
     function percentCode(str) {
@@ -318,10 +252,320 @@ export class EmailService {
     // });
   }
 
+  /** 发送邮箱验证码邮件 */
+  async sendEmailCode(email: string, code: string) {
+    const body = `<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <title>Boboan.net - 邮箱验证码</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #2c5364, #1c92d2);
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+    }
+    .container {
+      max-width: 420px;
+      margin: 48px auto;
+      background: rgba(30, 40, 60, 0.95);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      padding: 36px 32px 28px 32px;
+      text-align: center;
+      border: 1.5px solid rgba(255,255,255,0.08);
+    }
+    .logo {
+      font-size: 2.2em;
+      font-weight: bold;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 18px;
+      animation: shine 2s infinite linear alternate;
+    }
+    @keyframes shine {
+      0% { filter: brightness(1); }
+      100% { filter: brightness(1.3); }
+    }
+    .title {
+      font-size: 1.3em;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      color: #ffd200;
+      font-weight: 500;
+    }
+    .content {
+      font-size: 1.1em;
+      margin-bottom: 32px;
+      color: #e0e0e0;
+      letter-spacing: 0.5px;
+    }
+    .code-box {
+      display: inline-block;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: #fff;
+      font-size: 2.1em;
+      letter-spacing: 8px;
+      font-weight: bold;
+      padding: 16px 32px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px 0 rgba(0, 198, 255, 0.18);
+      margin-bottom: 24px;
+      user-select: all;
+      font-family: 'Consolas', 'Menlo', monospace;
+    }
+    .footer {
+      margin-top: 32px;
+      font-size: 0.95em;
+      color: #b0b0b0;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Boboan.net</div>
+    <div class="title">邮箱验证码</div>
+    <div class="content">这是您的验证码</div>
+    <div class="code-box">${code}</div>
+    <div class="footer">如果不是您本人操作，请忽略此邮件。</div>
+  </div>
+</body>
+</html>`
+      .replaceAll(/\r\n/g, '')
+      .replaceAll(/\n/g, '');
+
+    return this._sendEmail(email, body);
+  }
+
+  /** 发送邮箱认证邮件 */
+  async sendEmailVerify(email: string, callbackUrl: string) {
+    const body = `<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <title>Boboan.net - 邮箱认证</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: linear-gradient(135deg, #232526, #414345, #1c92d2);
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #fff;
+    }
+    .container {
+      max-width: 420px;
+      margin: 48px auto;
+      background: rgba(30, 40, 60, 0.97);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      padding: 36px 32px 28px 32px;
+      text-align: center;
+      border: 1.5px solid rgba(255,255,255,0.08);
+    }
+    .logo {
+      font-size: 2.2em;
+      font-weight: bold;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 18px;
+      animation: shine 2s infinite linear alternate;
+    }
+    @keyframes shine {
+      0% { filter: brightness(1); }
+      100% { filter: brightness(1.3); }
+    }
+    .title {
+      font-size: 1.3em;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      color: #ffd200;
+      font-weight: 500;
+    }
+    .content {
+      font-size: 1.1em;
+      margin-bottom: 32px;
+      color: #e0e0e0;
+      letter-spacing: 0.5px;
+    }
+    .verify-link {
+      font-size: 1.1em;
+      color: #00c6ff;
+      font-weight: bold;
+      text-decoration: underline;
+      word-break: break-all;
+      margin-bottom: 24px;
+      display: inline-block;
+      transition: color 0.3s;
+    }
+    .verify-link:hover {
+      color: #ffd200;
+    }
+    .footer {
+      margin-top: 32px;
+      font-size: 0.95em;
+      color: #b0b0b0;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Boboan.net</div>
+    <div class="title">邮箱认证</div>
+    <div class="content">请点击下方链接完成您的邮箱认证：</div>
+    <a class="verify-link" target="_blank" rel="noopener noreferrer" href="${callbackUrl}">${callbackUrl}</a>
+    <div class="footer">如果不是您本人操作，请忽略此邮件。</div>
+  </div>
+</body>
+</html>`
+      .replaceAll(/\r\n/g, '')
+      .replaceAll(/\n/g, '');
+
+    return this._sendEmail(email, body);
+  }
+
   async getRandomString() {
     return randomString(32);
   }
   async getHash() {
     return crypto.createHash('sha256').update('').digest('hex');
+  }
+
+  /**
+   * [防滥用标识]
+   * 确保用户授权code有效再调用
+   * google 快捷注册 发送注册验证邮件
+   */
+  async __prevent_abuse__googleOAuthFastSignUpSendEmail({
+    profile,
+    ua,
+  }: {
+    profile: IDTokenDto;
+    ua: string;
+  }) {
+    // 创建给callback的上下文
+    const context: GoogleOAuth2VerifyCallbackContext = {
+      type: EnumEVCType.FAST_LOGIN_SIGNUP,
+      profile,
+      ua,
+    };
+
+    // 存入临时表
+    const temp_code = await this.onceContextService.set({ context });
+
+    // 把 code 加入callback参数
+    const z = encryptSearch({ code: temp_code });
+
+    const callbackUrl = `${process.env.BACK_HOST}/email/callback?z=${z}`;
+
+    // 发送邮件 等待回调
+    await this.sendEmailVerify(profile.email, callbackUrl);
+  }
+
+  /**
+   * [防滥用标识]
+   * 确保用户授权code有效再调用
+   * google 快捷注册 发送绑定验证邮件
+   */
+  async __prevent_abuse__googleOAuthBindAccountSendEmail({
+    profile,
+    ua,
+  }: {
+    profile: IDTokenDto;
+    ua: string;
+  }) {
+    // 创建给callback的上下文
+    const context: GoogleOAuth2VerifyCallbackContext = {
+      type: EnumEVCType.FAST_LOGIN_BIND,
+      profile,
+      ua,
+    };
+
+    // 存入临时表
+    const temp_code = await this.onceContextService.set({ context });
+
+    // 把 code 加入callback参数
+    const z = encryptSearch({ code: temp_code });
+
+    const callbackUrl = `${process.env.BACK_HOST}/email/callback?z=${z}`;
+
+    // 发送邮件 等待回调
+    await this.sendEmailVerify(profile.email, callbackUrl);
+  }
+
+  // 处理 邮箱认证的callback
+  async handleCallback(
+    context: EmailCallbackContext,
+    ua: string,
+  ): Promise<{ params?: URLSearchParams }> {
+    const params = new URLSearchParams();
+    switch (context.type) {
+      case EnumEVCType.BIND:
+        // 调用绑定
+        // TODO
+        break;
+      case EnumEVCType.FAST_LOGIN_SIGNUP:
+        {
+          const G_context = context as GoogleOAuth2VerifyCallbackContext;
+          // 创建用户
+          const user = await this.userServices.fastSignUpByGoogleProfile(
+            G_context.profile,
+          );
+          // 绑定账号
+          await this.googleOauthServices.bindUserGoogleAccountByProfile(
+            user,
+            G_context.profile,
+          );
+          // 同一设备？生成登录 code
+          if (G_context.ua === ua) {
+            // 生成code
+            const code = await this.authServices.getLoginCode(user.id, ua);
+
+            params.append('code', code);
+          }
+        }
+        break;
+
+      case EnumEVCType.FAST_LOGIN_BIND:
+        {
+          const G_context = context as GoogleOAuth2VerifyCallbackContext;
+          // 用 email 查询用户
+          const user = await this.userServices.findByEmail(
+            G_context.profile.email,
+          );
+          // 绑定账号
+          await this.googleOauthServices.bindUserGoogleAccountByProfile(
+            user,
+            G_context.profile,
+          );
+          // 同一设备？生成登录 code
+          if (G_context.ua === ua) {
+            // 生成code
+            const code = await this.authServices.getLoginCode(user.id, ua);
+
+            params.append('code', code);
+          }
+        }
+        break;
+      default:
+        throw new BusinessException('参数错误', ResService.CODES.BadRequest);
+    }
+
+    return { params };
+  }
+
+  // 处理回调的重定向 从 hash 中传值
+  async finishEmailVerifyRedirect(params: URLSearchParams) {
+    const url = `${process.env.FRONT_HOST}/o2/verify-res#${params.toString()}`;
+    return url;
   }
 }

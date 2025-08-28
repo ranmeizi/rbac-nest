@@ -18,6 +18,13 @@ async function bootstrap() {
     }),
   );
 
+  // 配置 CORS
+  app.enableCors({
+    origin: '*', // 允许所有来源，生产环境建议指定域名
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   await app.listen(process.env.PORT);
 }
 bootstrap();
