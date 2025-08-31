@@ -18,8 +18,8 @@ import {
   EmailCallbackContext,
   EnumEVCType,
 } from './dto/email.dto';
-import { AuthService } from 'src/rbac/auth/auth.service';
-import { UsersService } from 'src/rbac/users/users.service';
+import { AuthService } from 'src/RBAC/auth/auth.service';
+import { UsersService } from 'src/RBAC/users/users.service';
 import { GoogleOauthService } from 'src/oauth/google-oauth/google-oauth.service';
 import { URLSearchParams } from 'url';
 import { IDTokenDto } from 'src/oauth/google-oauth/dto/google.dto';
