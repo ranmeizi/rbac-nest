@@ -7,6 +7,8 @@ import { UserDto } from '../users/dto/expose-user.dto';
 import { OnceContextService } from 'src/utils/once_context/once_context.service';
 import { BusinessException } from 'src/error-handler/BusinessException';
 import { ResService } from 'src/res/res.service';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
 export class AuthService {
@@ -124,5 +126,30 @@ export class AuthService {
     });
 
     return code;
+  }
+}
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private readonly userService: UsersService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // 从 Authorization 头中提取 JWT
+      ignoreExpiration: false, // 如果令牌过期，则拒绝请求
+      secretOrKey: process.env.JWT_SECRET,
+    });
+  }
+
+  async validate(payload: any) {
+    // payload 是解码后的 JWT 数据
+    const userId = payload.userId;
+    // 查一下 User
+    const user = await this.userService.findOne(userId);
+    // 查一下 Permission
+    const permissions = await this.userService.getUserPermissions(userId);
+
+    return {
+      user,
+      permissions,
+    };
   }
 }

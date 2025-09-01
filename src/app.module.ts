@@ -9,12 +9,8 @@ import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
 import { AuthModule } from './rbac/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './guards/jwt/jwt.guard';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
-import { UsersService } from './rbac/users/users.service';
-import { RolesService } from './rbac/roles/roles.service';
-import { PermissionsService } from './rbac/permissions/permissions.service';
 import { GoogleOauthModule } from './oauth/google-oauth/google-oauth.module';
 import { OnceContextModule } from './utils/once_context/once_context.module';
 
