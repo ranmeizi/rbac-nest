@@ -9,24 +9,17 @@ export class UpdateUserDto {
   email?: string;
 
   /**
-   * 姓氏
+   * 昵称
    */
   @IsOptional() // 可选字段
-  @IsString({ message: '姓氏必须是字符串' }) // 验证字符串
-  firstName?: string;
+  @IsString({ message: '昵称必须是字符串' }) // 验证字符串
+  nickname?: string;
 
   /**
    * ID 编号
    */
   @IsString({ message: 'ID 必须是字符串' }) // 必填字段，必须是字符串
   id: string;
-
-  /**
-   * 名字
-   */
-  @IsOptional() // 可选字段
-  @IsString({ message: '名字必须是字符串' }) // 验证字符串
-  lastName?: string;
 
   /**
    * 状态 active-正常 inactive-失效 locked-锁定
