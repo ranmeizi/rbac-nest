@@ -239,13 +239,13 @@ export class EmailService {
         ...headers,
       },
       params,
-    });
-    // .then((res) => {
-    //   console.log('wwwji', res);
-    // })
-    // .catch((e) => {
-    //   console.warn('err', e);
-    // });
+    })
+      .then((res) => {
+        console.log('wwwji', res);
+      })
+      .catch((e) => {
+        console.warn('err', e);
+      });
   }
 
   /** 发送邮箱验证码邮件 */

@@ -2,9 +2,13 @@ import {
   Body,
   Controller,
   forwardRef,
+  Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   Inject,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -38,7 +42,15 @@ export class AuthController {
     @Inject(forwardRef(() => EmailService))
     private readonly emailService: EmailService,
     private readonly googleOauthService: GoogleOauthService,
-  ) {}
+  ) { }
+
+  @Get('preregister')
+  async preregister(@Query('email') email: string) {
+    // 检查用户名是否已存在
+    const existingEmail = await this.authService.preregister(email);
+
+    return this.res.success({ existingEmail });
+  }
 
   /** 用户登录 */
   @Post('login')
@@ -47,6 +59,7 @@ export class AuthController {
     return this.res.success(result);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/refreshToken')
   async refreshToken(@Body('refresh_token') refreshToken: string) {
     const result = await this.authService.refreshToken(refreshToken);
@@ -69,6 +82,7 @@ export class AuthController {
       '';
     // 生成验证码
     const code = await this.emailService.genCode(ip);
+
     // 尝试发邮件
     await this.emailService.sendEmailCode(email, code);
 
@@ -97,13 +111,16 @@ export class AuthController {
     }
 
     // 创建用户
-    await this.userService.create({
+    const user = await this.userService.create({
       username: emailSignupDto.email,
       email: emailSignupDto.email,
       password: emailSignupDto.password,
     });
 
-    return this.res.success('');
+    // 给这个用户签发token
+    const token = await this.authService.__prevent_abuse__OAuthSignToken(user);
+
+    return this.res.success(token);
   }
 
   @Post('/google-login')

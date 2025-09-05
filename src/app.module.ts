@@ -7,7 +7,6 @@ import { dataSourceOptions } from './db';
 import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
-import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
@@ -16,6 +15,8 @@ import { OnceContextModule } from './utils/once_context/once_context.module';
 import { OssModule } from './oss/oss.module';
 import { WeatherModule } from './weather/weather.module';
 import { WallpaperModule } from './wallpaper/wallpaper.module';
+import { AuthModule } from './RBAC/auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -34,15 +35,12 @@ import { WallpaperModule } from './wallpaper/wallpaper.module';
         autoLoadEntities: true,
       }),
     }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
-      }),
-      inject: [ConfigService],
+    JwtModule.register({
+      secret: process.env.JWT_SECRET, // JWT 密钥
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN }, // 令牌有效期
     }),
     RbacModule,
+    UserModule,
     ResModule, // 通用响应体
     ErrorHandlerModule, // 错误处理
     CrudModule,

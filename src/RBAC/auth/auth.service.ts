@@ -18,11 +18,20 @@ export class AuthService {
     private readonly onceContextService: OnceContextService,
   ) {}
 
+  /** 预注册，告诉前台是注册还是登陆 */
+  async preregister(email: string) {
+    const existingUser = await this.userService.findByEmail(email);
+
+    return {
+      type: !existingUser ? 'register' : 'login',
+    };
+  }
+
   private async _signToken(
     user: UserDto,
     needRefresh = false,
   ): Promise<TokenDto> {
-    const expires_in = (Number(process.env.JWT_EXPIRES_IN) || 3600) * 1000;
+    const expires_in = process.env.JWT_EXPIRES_IN;
 
     // 生成访问令牌 (accessToken)
     const payload = { username: user.email, sub: user.id, userId: user.id };
@@ -138,6 +147,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    console.log('payyy', payload);
+
     // payload 是解码后的 JWT 数据
     const userId = payload.userId;
     // 查一下 User
