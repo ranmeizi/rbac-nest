@@ -4,25 +4,19 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './db';
-import { UsersModule } from './RBAC/users/users.module';
-import { RolesModule } from './RBAC/roles/roles.module';
-import { PermissionsModule } from './RBAC/permissions/permissions.module';
 import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
-import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './guards/jwt/jwt.guard';
-import { OssModule } from './oss/oss.module';
-import { WeatherModule } from './weather/weather.module';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
-import { UserModule } from './user/user.module';
-import { UsersService } from './RBAC/users/users.service';
-import { RolesService } from './RBAC/roles/roles.service';
-import { PermissionsService } from './RBAC/permissions/permissions.service';
+import { GoogleOauthModule } from './oauth/google-oauth/google-oauth.module';
+import { OnceContextModule } from './utils/once_context/once_context.module';
+import { OssModule } from './oss/oss.module';
+import { WeatherModule } from './weather/weather.module';
 import { WallpaperModule } from './wallpaper/wallpaper.module';
+import { AuthModule } from './RBAC/auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -41,19 +35,10 @@ import { WallpaperModule } from './wallpaper/wallpaper.module';
         autoLoadEntities: true,
       }),
     }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
-      }),
-      inject: [ConfigService],
+    JwtModule.register({
+      secret: process.env.JWT_SECRET, // JWT 密钥
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN }, // 令牌有效期
     }),
-
-    UsersModule,
-    RolesModule,
-    PermissionsModule,
     RbacModule,
     UserModule,
     ResModule, // 通用响应体
@@ -64,14 +49,10 @@ import { WallpaperModule } from './wallpaper/wallpaper.module';
     WeatherModule,
     EmailModule,
     WallpaperModule,
+    GoogleOauthModule,
+    OnceContextModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    JwtStrategy,
-    UsersService,
-    RolesService,
-    PermissionsService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

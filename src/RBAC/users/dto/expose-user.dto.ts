@@ -9,19 +9,19 @@ export class UserDto {
   username: string;
 
   @Expose()
+  nickname?: string;
+
+  @Expose()
+  avatar?: string;
+
+  @Expose()
   email: string;
 
   @Expose()
+  emailVerified: boolean;
+
+  @Expose()
   status: string;
-
-  @Expose()
-  firstName: string;
-
-  @Expose()
-  lastName: string;
-
-  @Expose()
-  avatar: string;
 
   @Expose()
   @Transform(({ value }) =>

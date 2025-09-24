@@ -36,5 +36,7 @@ lerna-debug.log*
 
 .env.development
 .env.prod
+.env.test
+
 wallpaper_json_data
 /wallpaper_images/
