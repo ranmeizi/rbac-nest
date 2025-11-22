@@ -29,7 +29,7 @@ export class OssService {
     const host = HOST;
     return {
       //过期时间 2分钟
-      expire: dayjs().add(2, 'minutes').unix().toString(),
+      // expire: dayjs().add(2, 'minutes').unix().toString(),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       policy: formData.policy,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access

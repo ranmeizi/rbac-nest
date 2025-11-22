@@ -17,6 +17,7 @@ import { WeatherModule } from './weather/weather.module';
 import { WallpaperModule } from './wallpaper/wallpaper.module';
 import { AuthModule } from './RBAC/auth/auth.module';
 import { UserModule } from './user/user.module';
+import { JsonUploadModule } from './json-upload/json-upload.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { UserModule } from './user/user.module';
     CrudModule,
     AuthModule,
     OssModule,
+    JsonUploadModule,
     WeatherModule,
     EmailModule,
     WallpaperModule,

@@ -6,8 +6,10 @@ import {
   UpdateDateColumn,
   ManyToMany,
   JoinTable,
+  OneToOne,
 } from 'typeorm';
 import { Role } from './role.entity';
+import { UserOss } from './user_oss.entity';
 import { Exclude } from 'class-transformer';
 
 export enum EnumUserStatus {
@@ -85,6 +87,9 @@ export class User {
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable() // TypeORM 会自动创建 user_roles 关联表
   roles: Promise<Role[]>;
+
+  @OneToOne(() => UserOss, (userOss) => userOss.user)
+  userOss: UserOss;
 
   @CreateDateColumn({ name: 'create_at' })
   createdAt: Date;
