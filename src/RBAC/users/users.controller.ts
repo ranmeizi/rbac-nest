@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,6 +22,8 @@ import {
 } from 'src/decorators/currentUser.decorator';
 import { UserDto } from './dto/expose-user.dto';
 import { PermissionGuard } from 'src/guards/permission/permission.guard';
+import { Permission } from 'src/decorators/permission.decorator';
+import { SignInterceptor } from 'src/interceptors/sign/sign.interceptors';
 
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @Controller('users')
@@ -39,6 +42,7 @@ export class UsersController {
 
   /** 查询用户列表 */
   @Get('/list')
+  // @Permission(['user.list'])
   async findAll(@Query() queryUserListDto: QueryUserListDto) {
     const res = await this.usersService.findAll(queryUserListDto);
     return this.res.success(res);

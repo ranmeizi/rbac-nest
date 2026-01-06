@@ -7,7 +7,7 @@ import { dataSourceOptions } from './db';
 import { ResModule } from './res/res.module';
 import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { CrudModule } from './utils/crud/crud.module';
-import { AuthModule } from './rbac/auth/auth.module';
+import { AuthModule } from './RBAC/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from './utils/email/email.module';
 import { RbacModule } from './RBAC/rbac.module';
